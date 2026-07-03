@@ -215,6 +215,7 @@ function resize(){dpr=Math.min(devicePixelRatio||1,2);const w=innerWidth,h=inner
   [voidCv,ov].forEach(c=>{c.width=w*dpr;c.height=h*dpr;});
   W=ov.width;H=ov.height;
   if(glOk){gl.viewport(0,0,voidCv.width,voidCv.height);gl.uniform2f(uni.uRes,voidCv.width,voidCv.height);gl.uniform1f(uni.uCell,cell*dpr);}
+  titleCells=null; // dither grid depends on W/H — rebuild lazily
   if(!stars.length)makeStars();
 }
 addEventListener("resize",resize);
@@ -307,6 +308,47 @@ function drawTitle(cx,cy,hpx,alpha,shown,cursor){
   ctx.restore();
 }
 const smooth=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);};
+
+// ---------- persistent title — screen-space (hooked to the camera), top-center,
+// built from dither cells sampled off a rasterized "ORRERY", twinkling white ----------
+let titleCells=null,titleBox=null;
+function buildTitleCells(){
+  const th=Math.max(20,Math.min(W*0.055,H*0.085));   // glyph height, device px
+  const g=Math.max(3,Math.round(th/8));              // dither cell size, device px
+  const c=document.createElement("canvas");
+  const x=c.getContext("2d",{willReadFrequently:true});
+  x.font="700 "+th+"px "+MONO();
+  const tw=x.measureText("ORRERY").width;
+  c.width=Math.ceil(tw+g*4);c.height=Math.ceil(th*1.4);
+  x.font="700 "+th+"px "+MONO();x.textAlign="center";x.textBaseline="middle";
+  x.fillStyle="#fff";x.fillText("ORRERY",c.width/2,c.height/2);
+  const img=x.getImageData(0,0,c.width,c.height).data;
+  titleCells=[];
+  for(let gy=0;gy<c.height;gy+=g)for(let gx=0;gx<c.width;gx+=g){
+    const px=Math.min(c.width-1,gx+(g>>1)),py=Math.min(c.height-1,gy+(g>>1));
+    const a=img[(py*c.width+px)*4+3]/255;
+    if(a>0.25)titleCells.push({x:gx,y:gy,cov:a,rnd:hash2(gx,gy)});
+  }
+  titleBox={w:c.width,h:c.height,g};
+}
+function drawPersistentTitle(t,alpha){
+  if(!titleCells)buildTitleCells();
+  const {w,h,g}=titleBox;
+  const ox=(W-w)/2, oy=H*0.078-h/2;
+  ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.font="700 "+(g*1.5)+"px "+MONO();
+  ctx.shadowColor="rgba(255,255,255,.9)";ctx.shadowBlur=5*dpr;
+  const spSeed=(t*2.5)|0;
+  for(const cl of titleCells){
+    const tw2=reduce?1:(0.72+0.28*Math.sin(t*2.3+cl.rnd*6.283));
+    const L=Math.min(1,cl.cov*tw2);
+    const sp=!reduce&&hash2(cl.x+spSeed*131,cl.y)>0.985;   // occasional hard sparkle
+    const ch=sp?"+":RAMP[Math.max(1,Math.floor(L*(RAMP.length-1)))];
+    ctx.fillStyle=`rgba(255,255,255,${(alpha*(sp?1:0.35+0.65*L)).toFixed(3)})`;
+    ctx.fillText(ch,ox+cl.x+g/2,oy+cl.y+g/2);
+  }
+  ctx.shadowBlur=0;ctx.restore();
+}
 const easeIn=p=>p*p*p, easeInOut=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
 const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
 
@@ -402,6 +444,13 @@ function render(now){
   if(titleAlpha>0.01){const typed=boot.typed(it-T.type);const shown=(it<T.typeEnd)?"Orrery".slice(0,typed):"Orrery";
     const cur=it<T.typeEnd&&Math.floor(it*2.6)%2===0;
     if(shown.length)drawTitle(W/2,H/2,titleH,titleAlpha,shown,cur);else if(cur)drawTitle(W/2,H/2,titleH,titleAlpha,"",true);}
+
+  // persistent dithered title — fades in as the boot zoom lands, dims while dived
+  if(boot.done){
+    const tin=reduce?1:smooth(T.doneT,T.doneT+1.2,it);
+    const ta=tin*Math.max(0,1-camK*1.2);
+    if(ta>0.01)drawPersistentTitle(t,ta);
+  }
 
   requestAnimationFrame(render);
 }

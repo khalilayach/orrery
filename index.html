@@ -24,10 +24,12 @@
 
   /* temple foreground = the frontground photo, its center masked out so the void shows */
   #frame{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0;will-change:transform,opacity}
+  /* 100% (no crop): open sky at top, pillars down the sides, ground at bottom.
+     center masked to void; heavy inset vignette fades the stone edges into black. */
   #frame .photo{position:absolute;inset:0;background:var(--frame-src) center/cover no-repeat;
-    -webkit-mask-image:radial-gradient(ellipse 50% 64% at 50% 44%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 36%, rgba(0,0,0,1) 76%);
-    mask-image:radial-gradient(ellipse 50% 64% at 50% 44%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 36%, rgba(0,0,0,1) 76%)}
-  #frame .vig{position:absolute;inset:0;box-shadow:inset 0 0 260px 70px rgba(0,0,0,.85)}
+    -webkit-mask-image:radial-gradient(ellipse 62% 72% at 50% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 44%, rgba(0,0,0,1) 82%);
+    mask-image:radial-gradient(ellipse 62% 72% at 50% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 44%, rgba(0,0,0,1) 82%)}
+  #frame .vig{position:absolute;inset:0;box-shadow:inset 0 0 200px 80px rgba(0,0,0,1)}
 
   #wash{position:fixed;inset:0;z-index:5;pointer-events:none;
     background:radial-gradient(circle at var(--wx,50%) var(--wy,50%), var(--acc,#38E0FF) 0%, transparent 60%);
@@ -207,10 +209,21 @@ const STARFORMS=[
   [[0,0,'+'],[-1,0,'-'],[1,0,'-'],[0,-1,"'"]],
   [[0,0,'·'],[1,0,'·'],[0,1,'·']],
 ];
+// stellar palette — muted blackbody temperatures, mostly white with a few warm/cool.
+// [r,g,b, cumulative weight]. Kept low-saturation so nothing reads neon.
+const STAR_COLORS=[
+  [238,242,252, 0.60],  // white (most common)
+  [250,242,214, 0.78],  // warm white / pale yellow
+  [255,214,150, 0.90],  // amber
+  [255,180,120, 0.96],  // orange
+  [200,218,255, 1.00],  // pale blue
+];
+function pickStarColor(u){for(const c of STAR_COLORS){if(u<=c[3])return c;}return STAR_COLORS[0];}
 function makeStars(){let r=20260702;const rnd=()=>{r=(r*9301+49297)%233280;return r/233280;};
   stars=[];const n=80;
-  for(let i=0;i<n;i++){const x=rnd(),y=rnd();
-    stars.push({x,y,f:Math.floor(rnd()*STARFORMS.length),p:rnd()*6.28,b:rnd(),region:0.32+0.68*valueNoise2(x*3.5,y*3.5)});}}
+  for(let i=0;i<n;i++){const x=rnd(),y=rnd();const col=pickStarColor(rnd());
+    stars.push({x,y,f:Math.floor(rnd()*STARFORMS.length),p:rnd()*6.28,b:rnd(),
+      region:0.32+0.68*valueNoise2(x*3.5,y*3.5),col:[col[0],col[1],col[2]]});}}
 function resize(){dpr=Math.min(devicePixelRatio||1,2);const w=innerWidth,h=innerHeight;
   [voidCv,ov].forEach(c=>{c.width=w*dpr;c.height=h*dpr;});
   W=ov.width;H=ov.height;
@@ -245,8 +258,9 @@ function drawStars(alpha){
   const SU=cell*dpr*1.15;ctx.textAlign="center";ctx.textBaseline="middle";ctx.font=(cell*dpr*1.55)+"px "+MONO();
   for(const s of stars){const tw=0.6+0.4*Math.sin(performance.now()/1000*1.1+s.p);
     const sx=((s.x+pan.x)%1+1)%1*W,sy=((s.y+pan.y)%1+1)%1*H;
-    ctx.shadowBlur=3*dpr*s.region;ctx.shadowColor="rgba(228,234,248,.5)";
-    ctx.fillStyle=`rgba(230,236,250,${(0.10+0.28*tw)*alpha*s.region*vigK(sx,sy)})`;
+    const c=s.col;
+    ctx.shadowBlur=3.4*dpr*s.region;ctx.shadowColor=`rgba(${c[0]},${c[1]},${c[2]},.55)`;
+    ctx.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},${(0.13+0.33*tw)*alpha*s.region*vigK(sx,sy)})`;
     for(const g of STARFORMS[s.f])ctx.fillText(g[2],sx+g[0]*SU,sy+g[1]*SU);}
   ctx.shadowBlur=0;
 }
@@ -337,20 +351,25 @@ function drawPersistentTitle(t,alpha){
   const ox=(W-w)/2, oy=H*0.078-h/2;
   ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";
   ctx.font="600 "+(g*1.35)+"px "+MONO();
-  ctx.shadowColor="rgba(240,248,255,.9)";ctx.shadowBlur=3.2*dpr;  // brighter white glow lifting off the void
+  // two-pass: soft wide bloom underneath, then crisp bright glyphs on top
+  ctx.shadowColor="rgba(210,228,255,.75)";ctx.shadowBlur=7*dpr;
   const spSeed=(t*2.5)|0;
-  for(const cl of titleCells){
-    const tw2=reduce?1:(0.6+0.4*Math.sin(t*2.3+cl.rnd*6.283));
-    const L=Math.min(1,cl.cov*tw2);
-    const sp=!reduce&&hash2(cl.x+spSeed*131,cl.y)>0.99;   // rarer, softer sparkle
-    const ch=sp?"+":RAMP[Math.max(1,Math.floor(L*(RAMP.length-1)))];
-    // cool gray-blue like the void glyphs, brightening to white on sparkles/peaks
-    const wht=sp?1:0.6*L;
-    const r=Math.round(150+105*wht),gg=Math.round(166+89*wht),b=Math.round(198+57*wht);
-    ctx.fillStyle=`rgba(${r},${gg},${b},${(alpha*(sp?0.85:0.12+0.5*L)).toFixed(3)})`;
-    ctx.fillText(ch,ox+cl.x+g/2,oy+cl.y+g/2);
+  for(let pass=0;pass<2;pass++){
+    for(const cl of titleCells){
+      const tw2=reduce?1:(0.7+0.3*Math.sin(t*2.3+cl.rnd*6.283));
+      const L=Math.min(1,cl.cov*tw2);
+      const sp=!reduce&&hash2(cl.x+spSeed*131,cl.y)>0.99;   // occasional hard sparkle
+      const ch=sp?"+":RAMP[Math.max(1,Math.floor(L*(RAMP.length-1)))];
+      // near-white body, warming to full white on sparkles/peaks
+      const wht=sp?1:0.7*L;
+      const r=Math.round(224+31*wht),gg=Math.round(230+25*wht),b=Math.round(240+15*wht);
+      const bodyA=0.42+0.55*L;
+      ctx.fillStyle=`rgba(${r},${gg},${b},${(alpha*(sp?1:bodyA)).toFixed(3)})`;
+      ctx.fillText(ch,ox+cl.x+g/2,oy+cl.y+g/2);
+    }
+    ctx.shadowBlur=0; // pass 2 crisp, no shadow
   }
-  ctx.shadowBlur=0;ctx.restore();
+  ctx.restore();
 }
 const easeIn=p=>p*p*p, easeInOut=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
 const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;

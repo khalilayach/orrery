@@ -337,15 +337,15 @@ function drawPersistentTitle(t,alpha){
   const ox=(W-w)/2, oy=H*0.078-h/2;
   ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";
   ctx.font="600 "+(g*1.35)+"px "+MONO();
-  ctx.shadowColor="rgba(150,168,200,.5)";ctx.shadowBlur=1.2*dpr;  // dim cool glow so it settles into the void
+  ctx.shadowColor="rgba(240,248,255,.9)";ctx.shadowBlur=3.2*dpr;  // brighter white glow lifting off the void
   const spSeed=(t*2.5)|0;
   for(const cl of titleCells){
     const tw2=reduce?1:(0.6+0.4*Math.sin(t*2.3+cl.rnd*6.283));
     const L=Math.min(1,cl.cov*tw2);
     const sp=!reduce&&hash2(cl.x+spSeed*131,cl.y)>0.99;   // rarer, softer sparkle
     const ch=sp?"+":RAMP[Math.max(1,Math.floor(L*(RAMP.length-1)))];
-    // cool gray-blue like the void glyphs, brightening to white only on sparkles/peaks
-    const wht=sp?1:0.35*L;
+    // cool gray-blue like the void glyphs, brightening to white on sparkles/peaks
+    const wht=sp?1:0.6*L;
     const r=Math.round(150+105*wht),gg=Math.round(166+89*wht),b=Math.round(198+57*wht);
     ctx.fillStyle=`rgba(${r},${gg},${b},${(alpha*(sp?0.85:0.12+0.5*L)).toFixed(3)})`;
     ctx.fillText(ch,ox+cl.x+g/2,oy+cl.y+g/2);

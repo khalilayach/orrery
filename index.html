@@ -32,7 +32,7 @@
      1) radial center hole = the void window in the middle
      2) linear top fade = pillar tops dissolve STRAIGHT up into black (no circular arc) */
   #frame .photo{position:absolute;inset:0;background:var(--frame-src) center bottom/cover no-repeat;
-    transform:scaleX(.99) scaleY(.82);transform-origin:50% 100%;
+    transform:translateY(2.3%) scaleX(.99) scaleY(.82);transform-origin:50% 100%;
     filter:url(#fisheye);
     -webkit-mask-image:radial-gradient(ellipse 60% 62% at 50% 47%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,1) 62%), linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 56%, rgba(0,0,0,0) 90%);
     -webkit-mask-composite:source-in;
@@ -91,7 +91,7 @@
   <feImage preserveAspectRatio="none" x="0" y="0" width="100%" height="100%" result="mx" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' preserveAspectRatio='none'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='rgb(0,0,0)'/><stop offset='1' stop-color='rgb(255,0,0)'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g)'/></svg>"/>
   <feImage preserveAspectRatio="none" x="0" y="0" width="100%" height="100%" result="my" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' preserveAspectRatio='none'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='rgb(0,0,0)'/><stop offset='1' stop-color='rgb(0,255,0)'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g)'/></svg>"/>
   <feBlend in="mx" in2="my" mode="screen" result="map"/>
-  <feDisplacementMap in="SourceGraphic" in2="map" scale="-64" xChannelSelector="R" yChannelSelector="G"/>
+  <feDisplacementMap in="SourceGraphic" in2="map" scale="-86" xChannelSelector="R" yChannelSelector="G"/>
 </filter></svg>
 <div id="scene">
   <canvas id="void"></canvas>
@@ -343,7 +343,7 @@ const smooth=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);
 
 // ---------- persistent title — screen-space (hooked to the camera), top-center,
 // built from dither cells sampled off a rasterized "ORRERY", twinkling white ----------
-let titleCells=null,titleBox=null;
+let titleCells=null,titleBox=null,titleSprite=null;
 function buildTitleCells(){
   const th=Math.max(15,Math.min(W*0.088,H*0.052));   // glyph height, device px (W bound keeps narrow screens legible)
   const g=Math.max(2,Math.round(th/17));             // dither cell size, device px — finer = more detailed
@@ -362,31 +362,35 @@ function buildTitleCells(){
     if(a>0.32)titleCells.push({x:gx,y:gy,cov:a,rnd:hash2(gx,gy)});  // lower threshold keeps soft edge cells for texture
   }
   titleBox={w:c.width,h:c.height,g};
+  titleSprite=c; // keep the solid "ORRERY" raster to cast a clean whole-shape glow
 }
 function drawPersistentTitle(t,alpha){
   if(!titleCells)buildTitleCells();
   const {w,h,g}=titleBox;
   const ox=(W-w)/2, oy=H*0.078-h/2;
-  ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";
-  ctx.font="600 "+(g*1.35)+"px "+MONO();
-  // two-pass: soft wide bloom underneath, then crisp bright glyphs on top
-  ctx.shadowColor="rgba(210,228,255,.75)";ctx.shadowBlur=7*dpr;
+  ctx.save();
   const spSeed=(t*2.5)|0;
-  for(let pass=0;pass<2;pass++){
-    for(const cl of titleCells){
-      const tw2=reduce?1:(0.7+0.3*Math.sin(t*2.3+cl.rnd*6.283));
-      const L=Math.min(1,cl.cov*tw2);
-      const sp=!reduce&&hash2(cl.x+spSeed*131,cl.y)>0.99;   // occasional hard sparkle
-      const ch=sp?"+":RAMP[Math.max(1,Math.floor(L*(RAMP.length-1)))];
-      // near-white body, warming to full white on sparkles/peaks
-      const wht=sp?1:0.7*L;
-      const r=Math.round(224+31*wht),gg=Math.round(230+25*wht),b=Math.round(240+15*wht);
-      const bodyA=0.42+0.55*L;
-      ctx.fillStyle=`rgba(${r},${gg},${b},${(alpha*(sp?1:bodyA)).toFixed(3)})`;
-      ctx.fillText(ch,ox+cl.x+g/2,oy+cl.y+g/2);
-    }
-    ctx.shadowBlur=0; // pass 2 crisp, no shadow
+  // white GLOW cast from the whole ORRERY shape (a few big-blur draws — clean halo,
+  // no per-cell stacking, so it glows instead of blowing out). gentle breathing pulse.
+  const pulse=reduce?1:(0.85+0.15*Math.sin(t*1.6));
+  ctx.globalCompositeOperation="lighter";ctx.shadowColor="rgba(255,255,255,.95)";
+  const glowSteps=[[34*dpr,.20],[20*dpr,.26],[11*dpr,.32],[5*dpr,.4]];
+  for(const gs of glowSteps){ctx.shadowBlur=gs[0]*pulse;ctx.globalAlpha=alpha*gs[1]*pulse;ctx.drawImage(titleSprite,ox,oy);}
+  ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.globalCompositeOperation="source-over";
+  // crisp dithered cells on top — keeps the ASCII texture + sparkle over the glow
+  ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="600 "+(g*1.35)+"px "+MONO();
+  ctx.shadowColor="rgba(255,255,255,.9)";ctx.shadowBlur=2.5*dpr;
+  for(const cl of titleCells){
+    const tw2=reduce?1:(0.7+0.3*Math.sin(t*2.3+cl.rnd*6.283));
+    const L=Math.min(1,cl.cov*tw2);
+    const sp=!reduce&&hash2(cl.x+spSeed*131,cl.y)>0.99;
+    const ch=sp?"+":RAMP[Math.max(1,Math.floor(L*(RAMP.length-1)))];
+    const wht=sp?1:0.75*L;
+    const r=Math.round(230+25*wht),gg=Math.round(236+19*wht),b=Math.round(244+11*wht);
+    ctx.fillStyle=`rgba(${r},${gg},${b},${(alpha*(sp?1:0.45+0.5*L)).toFixed(3)})`;
+    ctx.fillText(ch,ox+cl.x+g/2,oy+cl.y+g/2);
   }
+  ctx.shadowBlur=0;
   ctx.restore();
 }
 const easeIn=p=>p*p*p, easeInOut=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;

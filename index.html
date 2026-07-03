@@ -313,7 +313,7 @@ const smooth=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);
 // built from dither cells sampled off a rasterized "ORRERY", twinkling white ----------
 let titleCells=null,titleBox=null;
 function buildTitleCells(){
-  const th=Math.max(20,Math.min(W*0.055,H*0.085));   // glyph height, device px
+  const th=Math.max(20,Math.min(W*0.14,H*0.085));    // glyph height, device px (W bound keeps narrow screens legible)
   const g=Math.max(3,Math.round(th/12));             // dither cell size, device px
   const c=document.createElement("canvas");
   const x=c.getContext("2d",{willReadFrequently:true});

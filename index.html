@@ -45,8 +45,8 @@
   #skip:hover{color:#C9CDD6}
 
   #detail{position:fixed;inset:0;z-index:7;display:none;place-items:center;padding:5vh 5vw;
-    background:radial-gradient(120% 90% at 50% 0%, color-mix(in srgb,var(--acc) 12%,transparent), rgba(2,3,8,.86) 60%),rgba(2,3,8,.9);
-    backdrop-filter:blur(3px);opacity:0;transition:opacity .5s ease}
+    background:radial-gradient(120% 90% at 50% 0%, color-mix(in srgb,var(--acc) 10%,transparent), rgba(2,3,8,.40) 60%),rgba(2,3,8,.34);
+    opacity:0;transition:opacity .5s ease}
   #detail.on{display:grid;opacity:1}
   #detail .panel{max-width:760px;width:100%;transform:scale(.94) translateY(14px);opacity:0;transition:.55s cubic-bezier(.2,.7,.2,1);
     border:1px solid color-mix(in srgb,var(--acc) 40%,transparent);border-radius:var(--radius-lg);
@@ -157,6 +157,7 @@ function initGL(){
     vec2 auv=vec2((idx+local.x)/uCount, local.y);
     float cov=texture2D(uAtlas,auv).a;
     float bright=0.04+0.15*patches;
+    bright*=1.0+1.9*clamp((uZoom-1.0)/7.0,0.0,1.0); // dived: scaled-up dither stays visible behind the detail panel
     vec3 col=vec3(0.40,0.43,0.50)*bright*cov;
     gl_FragColor=vec4(col,1.0);
   }`;

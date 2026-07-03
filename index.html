@@ -225,7 +225,9 @@ document.getElementById("recenter").onclick=()=>panTarget={x:0,y:0};
 document.getElementById("skip").onclick=()=>{boot.skip();};
 
 function worldScreen(p){return[((p.cx+pan.x)%1+1)%1*W, ((p.cy+pan.y)%1+1)%1*H];}
-function hitTest(h){for(const p of MANIFEST.projects){const[sx,sy]=worldScreen(p);if(Math.hypot(h.x*W-sx,h.y*H-sy)<W*0.05)return p;}return null;}
+function nodePoints(p,sx,sy,spread){return p.nodes.map(n=>[sx+n[0]*W*spread,sy+n[1]*H*spread]);}
+function nearNode(p,sx,sy,hx,hy,r){for(const pt of nodePoints(p,sx,sy,1)){if(Math.hypot(hx-pt[0],hy-pt[1])<r)return true;}return false;}
+function hitTest(h){for(const p of MANIFEST.projects){const[sx,sy]=worldScreen(p);if(nearNode(p,sx,sy,h.x*W,h.y*H,W*0.04))return p;}return null;}
 function tint(hex,a){const n=parseInt(hex.slice(1),16);return`rgba(${n>>16&255},${n>>8&255},${n&255},${Math.max(0,a)})`;}
 
 function drawStars(alpha){
@@ -243,8 +245,8 @@ function getHalo(p){if(p._halo)return p._halo;let r=0;for(let i=0;i<p.id.length;
   p._halo=h;return h;}
 function drawConstellation(p,sx,sy,spread,nodeK,alpha,interactive){
   const NB=Math.max(6,H*0.014),acc=p.accent;
-  let near=interactive&&hover&&Math.hypot(hover.x*W-sx,hover.y*H-sy)<W*0.05;
-  const pts=p.nodes.map(n=>[sx+n[0]*W*spread,sy+n[1]*H*spread]);
+  let near=interactive&&hover&&nearNode(p,sx,sy,hover.x*W,hover.y*H,W*0.04);
+  const pts=nodePoints(p,sx,sy,spread);
   ctx.globalAlpha=alpha;
   ctx.textAlign="center";ctx.textBaseline="middle";ctx.font=(NB*0.6)+"px "+MONO();
   for(const hf of getHalo(p)){ctx.fillStyle=tint(acc,hf[3]*0.32*(near?1.4:1));ctx.fillText(hf[2],pts[0][0]+hf[0]*NB*2.6,pts[0][1]+hf[1]*NB*2.6);}

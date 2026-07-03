@@ -33,6 +33,7 @@
      2) linear top fade = pillar tops dissolve STRAIGHT up into black (no circular arc) */
   #frame .photo{position:absolute;inset:0;background:var(--frame-src) center bottom/cover no-repeat;
     transform:scaleX(.99) scaleY(.82);transform-origin:50% 100%;
+    filter:url(#fisheye);
     -webkit-mask-image:radial-gradient(ellipse 60% 62% at 50% 47%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,1) 62%), linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 56%, rgba(0,0,0,0) 90%);
     -webkit-mask-composite:source-in;
     mask-image:radial-gradient(ellipse 60% 62% at 50% 47%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,1) 62%), linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 56%, rgba(0,0,0,0) 90%);
@@ -83,6 +84,15 @@
 </style>
 </head>
 <body>
+<!-- weak fisheye/barrel warp for the temple photo, radiating from the center.
+     displacement map = red horizontal ramp + green vertical ramp (neutral 0.5 at
+     center), so feDisplacementMap pushes each pixel outward from the middle. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="fisheye" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+  <feImage preserveAspectRatio="none" x="0" y="0" width="100%" height="100%" result="mx" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' preserveAspectRatio='none'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='rgb(0,0,0)'/><stop offset='1' stop-color='rgb(255,0,0)'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g)'/></svg>"/>
+  <feImage preserveAspectRatio="none" x="0" y="0" width="100%" height="100%" result="my" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' preserveAspectRatio='none'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='rgb(0,0,0)'/><stop offset='1' stop-color='rgb(0,255,0)'/></linearGradient></defs><rect width='100' height='100' fill='url(%23g)'/></svg>"/>
+  <feBlend in="mx" in2="my" mode="screen" result="map"/>
+  <feDisplacementMap in="SourceGraphic" in2="map" scale="-64" xChannelSelector="R" yChannelSelector="G"/>
+</filter></svg>
 <div id="scene">
   <canvas id="void"></canvas>
   <canvas id="overlay"></canvas>

@@ -32,7 +32,7 @@
      1) radial center hole = the void window in the middle
      2) linear top fade = pillar tops dissolve STRAIGHT up into black (no circular arc) */
   #frame .photo{position:absolute;inset:0;background:var(--frame-src) center bottom/cover no-repeat;
-    transform:translateY(2.3%) scaleX(.99) scaleY(.82);transform-origin:50% 100%;
+    transform:translateY(5.5%) scaleX(.99) scaleY(.82);transform-origin:50% 100%;
     filter:url(#fisheye);
     -webkit-mask-image:radial-gradient(ellipse 60% 62% at 50% 47%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,1) 62%), linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 56%, rgba(0,0,0,0) 90%);
     -webkit-mask-composite:source-in;
@@ -374,7 +374,7 @@ function drawPersistentTitle(t,alpha){
   // no per-cell stacking, so it glows instead of blowing out). gentle breathing pulse.
   const pulse=reduce?1:(0.85+0.15*Math.sin(t*1.6));
   ctx.globalCompositeOperation="lighter";ctx.shadowColor="rgba(255,255,255,.95)";
-  const glowSteps=[[34*dpr,.20],[20*dpr,.26],[11*dpr,.32],[5*dpr,.4]];
+  const glowSteps=[[22*dpr,.12],[12*dpr,.15],[5*dpr,.2]];
   for(const gs of glowSteps){ctx.shadowBlur=gs[0]*pulse;ctx.globalAlpha=alpha*gs[1]*pulse;ctx.drawImage(titleSprite,ox,oy);}
   ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.globalCompositeOperation="source-over";
   // crisp dithered cells on top — keeps the ASCII texture + sparkle over the glow

@@ -314,7 +314,7 @@ const smooth=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);
 let titleCells=null,titleBox=null;
 function buildTitleCells(){
   const th=Math.max(20,Math.min(W*0.055,H*0.085));   // glyph height, device px
-  const g=Math.max(3,Math.round(th/8));              // dither cell size, device px
+  const g=Math.max(3,Math.round(th/12));             // dither cell size, device px
   const c=document.createElement("canvas");
   const x=c.getContext("2d",{willReadFrequently:true});
   x.font="700 "+th+"px "+MONO();
@@ -327,7 +327,7 @@ function buildTitleCells(){
   for(let gy=0;gy<c.height;gy+=g)for(let gx=0;gx<c.width;gx+=g){
     const px=Math.min(c.width-1,gx+(g>>1)),py=Math.min(c.height-1,gy+(g>>1));
     const a=img[(py*c.width+px)*4+3]/255;
-    if(a>0.25)titleCells.push({x:gx,y:gy,cov:a,rnd:hash2(gx,gy)});
+    if(a>0.5)titleCells.push({x:gx,y:gy,cov:a,rnd:hash2(gx,gy)});
   }
   titleBox={w:c.width,h:c.height,g};
 }
@@ -336,8 +336,8 @@ function drawPersistentTitle(t,alpha){
   const {w,h,g}=titleBox;
   const ox=(W-w)/2, oy=H*0.078-h/2;
   ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";
-  ctx.font="700 "+(g*1.5)+"px "+MONO();
-  ctx.shadowColor="rgba(255,255,255,.9)";ctx.shadowBlur=5*dpr;
+  ctx.font="700 "+(g*1.4)+"px "+MONO();
+  ctx.shadowColor="rgba(255,255,255,.8)";ctx.shadowBlur=2.5*dpr;
   const spSeed=(t*2.5)|0;
   for(const cl of titleCells){
     const tw2=reduce?1:(0.72+0.28*Math.sin(t*2.3+cl.rnd*6.283));

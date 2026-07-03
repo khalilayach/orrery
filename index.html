@@ -313,8 +313,8 @@ const smooth=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);
 // built from dither cells sampled off a rasterized "ORRERY", twinkling white ----------
 let titleCells=null,titleBox=null;
 function buildTitleCells(){
-  const th=Math.max(20,Math.min(W*0.14,H*0.085));    // glyph height, device px (W bound keeps narrow screens legible)
-  const g=Math.max(3,Math.round(th/12));             // dither cell size, device px
+  const th=Math.max(15,Math.min(W*0.088,H*0.052));   // glyph height, device px (W bound keeps narrow screens legible)
+  const g=Math.max(2,Math.round(th/17));             // dither cell size, device px — finer = more detailed
   const c=document.createElement("canvas");
   const x=c.getContext("2d",{willReadFrequently:true});
   x.font="700 "+th+"px "+MONO();
@@ -327,7 +327,7 @@ function buildTitleCells(){
   for(let gy=0;gy<c.height;gy+=g)for(let gx=0;gx<c.width;gx+=g){
     const px=Math.min(c.width-1,gx+(g>>1)),py=Math.min(c.height-1,gy+(g>>1));
     const a=img[(py*c.width+px)*4+3]/255;
-    if(a>0.5)titleCells.push({x:gx,y:gy,cov:a,rnd:hash2(gx,gy)});
+    if(a>0.32)titleCells.push({x:gx,y:gy,cov:a,rnd:hash2(gx,gy)});  // lower threshold keeps soft edge cells for texture
   }
   titleBox={w:c.width,h:c.height,g};
 }
@@ -336,15 +336,18 @@ function drawPersistentTitle(t,alpha){
   const {w,h,g}=titleBox;
   const ox=(W-w)/2, oy=H*0.078-h/2;
   ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";
-  ctx.font="700 "+(g*1.4)+"px "+MONO();
-  ctx.shadowColor="rgba(255,255,255,.8)";ctx.shadowBlur=2.5*dpr;
+  ctx.font="600 "+(g*1.35)+"px "+MONO();
+  ctx.shadowColor="rgba(150,168,200,.5)";ctx.shadowBlur=1.2*dpr;  // dim cool glow so it settles into the void
   const spSeed=(t*2.5)|0;
   for(const cl of titleCells){
-    const tw2=reduce?1:(0.72+0.28*Math.sin(t*2.3+cl.rnd*6.283));
+    const tw2=reduce?1:(0.6+0.4*Math.sin(t*2.3+cl.rnd*6.283));
     const L=Math.min(1,cl.cov*tw2);
-    const sp=!reduce&&hash2(cl.x+spSeed*131,cl.y)>0.985;   // occasional hard sparkle
+    const sp=!reduce&&hash2(cl.x+spSeed*131,cl.y)>0.99;   // rarer, softer sparkle
     const ch=sp?"+":RAMP[Math.max(1,Math.floor(L*(RAMP.length-1)))];
-    ctx.fillStyle=`rgba(255,255,255,${(alpha*(sp?1:0.35+0.65*L)).toFixed(3)})`;
+    // cool gray-blue like the void glyphs, brightening to white only on sparkles/peaks
+    const wht=sp?1:0.35*L;
+    const r=Math.round(150+105*wht),gg=Math.round(166+89*wht),b=Math.round(198+57*wht);
+    ctx.fillStyle=`rgba(${r},${gg},${b},${(alpha*(sp?0.85:0.12+0.5*L)).toFixed(3)})`;
     ctx.fillText(ch,ox+cl.x+g/2,oy+cl.y+g/2);
   }
   ctx.shadowBlur=0;ctx.restore();

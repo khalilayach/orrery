@@ -159,6 +159,12 @@ function initGL(){
     float bright=0.04+0.15*patches;
     bright*=1.0+1.9*clamp((uZoom-1.0)/7.0,0.0,1.0); // dived: scaled-up dither stays visible behind the detail panel
     vec3 col=vec3(0.40,0.43,0.50)*bright*cov;
+    // camera-space vignette: side edges, bottom 15%, top ~5% fall into darkness (gl y-up)
+    vec2 v=gl_FragCoord.xy/uRes;
+    float vig=smoothstep(0.0,0.16,v.x)*smoothstep(0.0,0.16,1.0-v.x)
+             *smoothstep(0.0,0.15,v.y)
+             *smoothstep(0.0,0.06,1.0-v.y);
+    col*=0.12+0.88*vig;
     gl_FragColor=vec4(col,1.0);
   }`;
   prog=gl.createProgram();gl.attachShader(prog,compile(gl.VERTEX_SHADER,vs));gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,fs));
@@ -231,12 +237,15 @@ function nearNode(p,sx,sy,hx,hy,r){for(const pt of nodePoints(p,sx,sy,1)){if(Mat
 function hitTest(h){for(const p of MANIFEST.projects){const[sx,sy]=worldScreen(p);if(nearNode(p,sx,sy,h.x*W,h.y*H,W*0.04))return p;}return null;}
 function tint(hex,a){const n=parseInt(hex.slice(1),16);return`rgba(${n>>16&255},${n>>8&255},${n&255},${Math.max(0,a)})`;}
 
+// canvas-space vignette matching the GL void (canvas y-down: bottom 15%, top ~5%, side edges)
+function vigK(sx,sy){const vx=sx/W,vy=sy/H;
+  return 0.12+0.88*(smooth(0,0.16,vx)*smooth(0,0.16,1-vx)*smooth(0,0.15,1-vy)*smooth(0,0.06,vy));}
 function drawStars(alpha){
   const SU=cell*dpr*1.15;ctx.textAlign="center";ctx.textBaseline="middle";ctx.font=(cell*dpr*1.55)+"px "+MONO();
   for(const s of stars){const tw=0.6+0.4*Math.sin(performance.now()/1000*1.1+s.p);
     const sx=((s.x+pan.x)%1+1)%1*W,sy=((s.y+pan.y)%1+1)%1*H;
     ctx.shadowBlur=3*dpr*s.region;ctx.shadowColor="rgba(228,234,248,.5)";
-    ctx.fillStyle=`rgba(230,236,250,${(0.10+0.28*tw)*alpha*s.region})`;
+    ctx.fillStyle=`rgba(230,236,250,${(0.10+0.28*tw)*alpha*s.region*vigK(sx,sy)})`;
     for(const g of STARFORMS[s.f])ctx.fillText(g[2],sx+g[0]*SU,sy+g[1]*SU);}
   ctx.shadowBlur=0;
 }

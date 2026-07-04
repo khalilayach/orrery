@@ -79,6 +79,61 @@
   @media (max-width:560px){#detail .sec{grid-template-columns:1fr;gap:6px}}
   #crt{position:fixed;inset:0;z-index:4;pointer-events:none;
     background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);mix-blend-mode:multiply;opacity:.6}
+
+  /* ---------- ORCH1 agent workspace: opaque Hermes-blue canvas over the black void ---------- */
+  #ws{position:fixed;left:50%;top:50%;width:86vw;height:84vh;z-index:8;display:none;
+    transform:translate(-50%,-50%) scale(.92);opacity:0;
+    border-radius:14px;overflow:hidden;background:#1d1fe6; /* opaque — the black void never shows through */
+    box-shadow:0 0 0 1px rgba(255,255,255,.16),0 40px 140px -40px rgba(0,0,0,.95);
+    transition:opacity .45s ease,transform .45s cubic-bezier(.2,.7,.2,1);
+    user-select:none;-webkit-user-select:none;cursor:grab;font-family:var(--mono)}
+  #ws.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  #ws.pan{cursor:grabbing}
+  #wsvoid{position:absolute;inset:0;z-index:0}
+  #wscrt{position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(2,2,40,.30) 0 1px,transparent 1px 3px);mix-blend-mode:multiply;opacity:.6}
+  #wsclose{position:absolute;top:10px;right:12px;z-index:600;font-family:var(--mono);font-size:.66rem;
+    letter-spacing:.12em;color:#1113b8;background:#fff;border:1px solid #c9ccf5;border-radius:var(--radius-sm);
+    padding:6px 10px;cursor:pointer}
+  #wsclose:hover{background:#eef0ff}
+  #wsspawn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;
+    width:72px;height:72px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+    color:#1113b8;font-size:30px;font-weight:300;background:#fff;border:1px solid #c9ccf5;
+    box-shadow:0 8px 26px -10px rgba(4,4,60,.6);animation:wspulse 2.8s ease-in-out infinite;transition:transform .15s}
+  #wsspawn:hover{transform:translate(-50%,-50%) scale(1.07)}
+  #wsspawn .hint{position:absolute;top:84px;left:50%;transform:translateX(-50%);white-space:nowrap;
+    font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:#c6caff}
+  @keyframes wspulse{0%,100%{box-shadow:0 8px 26px -10px rgba(4,4,60,.55)}50%{box-shadow:0 8px 34px -6px rgba(255,255,255,.45)}}
+  .ws-win{position:absolute;width:380px;z-index:10;border-radius:9px;overflow:hidden;background:#fff;
+    border:1px solid #c9ccf5;box-shadow:0 22px 60px -34px rgba(6,6,50,.75);
+    display:flex;flex-direction:column;transition:border-color .15s;will-change:transform}
+  .ws-win.focus{border-color:#1a1cd8}
+  .ws-bar{display:flex;align-items:center;gap:9px;padding:8px 10px;cursor:grab;background:#eef0ff;
+    border-bottom:1px solid #c9ccf5;position:relative;z-index:2}
+  .ws-bar.grab{cursor:grabbing}
+  .ws-avatar{width:22px;height:22px;border-radius:5px;flex:none;display:grid;place-items:center;
+    font-size:12px;color:#fff;font-weight:700;background:#1d1fe6}
+  .ws-name{font-family:var(--serif);font-size:.92rem;line-height:1;color:#1113b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ws-tag{font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:#6b6ee6}
+  .ws-ctrls{margin-left:auto;display:flex;gap:5px}
+  .ws-ctrls button{width:16px;height:16px;border-radius:4px;border:1px solid #c9ccf5;background:#fff;
+    color:#1a1cd8;cursor:pointer;padding:0;display:grid;place-items:center;font-size:10px;line-height:1;transition:.12s}
+  .ws-ctrls button:hover{background:#eef0ff;border-color:#1a1cd8}
+  .ws-ctrls .ws-x:hover{background:#ffe9ea;border-color:#e0455a;color:#c8394d}
+  .ws-body{position:relative;height:200px;overflow:hidden;background:#fff;transform-origin:top center;
+    transition:height .34s cubic-bezier(.4,0,.2,1),transform .34s cubic-bezier(.4,0,.2,1),opacity .28s}
+  .ws-bodycrt{position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(29,31,230,.05) 0 1px,transparent 1px 3px);opacity:.7}
+  .ws-term{position:absolute;inset:0;padding:12px 14px;font-size:.72rem;line-height:1.55;color:#1a1cd8;overflow:auto}
+  .ws-term .p{color:#1113b8;font-weight:600}
+  .ws-term .m{color:#6b6ee6}
+  .ws-term .c{display:inline-block;width:7px;height:13px;background:#1a1cd8;vertical-align:-2px;animation:wsblink 1s steps(1) infinite}
+  @keyframes wsblink{50%{opacity:0}}
+  .ws-win.lowered{width:212px}
+  .ws-win.lowered .ws-body{height:0;opacity:0;transform:perspective(600px) rotateX(-82deg) scaleY(.05)}
+  .ws-win.lowered .ws-ctrls{opacity:0;pointer-events:none;width:0;overflow:hidden}
+  .ws-win.lowered .ws-bar{cursor:grab;padding:9px 11px}
+  .ws-win.lowered .ws-tag::before{content:"▸ "}
   @media (prefers-reduced-motion:reduce){#frame,#ui,#detail,#detail .panel{transition:none}}
   :focus-visible{outline:2px solid #8A8F98;outline-offset:2px}
 </style>
@@ -110,6 +165,14 @@
   <div id="d-secs"></div>
   <button class="back" id="d-back">← back to the cosmos</button>
 </div></div>
+
+<!-- ORCH1 agent workspace — blue halftone canvas; black void stays visible around it -->
+<div id="ws">
+  <canvas id="wsvoid"></canvas>
+  <div id="wscrt"></div>
+  <div id="wsspawn">+<span class="hint">summon agent</span></div>
+  <button id="wsclose">× close</button>
+</div>
 
 <script>
 // ---------- data ----------
@@ -251,13 +314,13 @@ function resize(){dpr=Math.min(devicePixelRatio||1,2);const w=innerWidth,h=inner
 }
 addEventListener("resize",resize);
 
-ov.addEventListener("pointerdown",e=>{if(dive||detailOpen)return;
+ov.addEventListener("pointerdown",e=>{if(dive||detailOpen||wsOpen)return;
   drag={x:e.clientX,y:e.clientY,px:pan.x,py:pan.y};moved=0;ov.classList.add("drag");ov.setPointerCapture(e.pointerId);});
 ov.addEventListener("pointermove",e=>{const r=ov.getBoundingClientRect();hover={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};
   if(drag){const dx=(e.clientX-drag.x),dy=(e.clientY-drag.y);moved+=Math.abs(dx)+Math.abs(dy);
     pan.x=drag.px+dx/r.width;pan.y=drag.py+dy/r.height;panTarget={x:pan.x,y:pan.y};}});
 ov.addEventListener("pointerup",e=>{ov.classList.remove("drag");
-  if(boot.done&&!dive&&!undive&&!detailOpen&&moved<6&&hover){const hit=hitTest(hover);if(hit)startDive(hit,e.clientX,e.clientY);}
+  if(boot.done&&!dive&&!undive&&!detailOpen&&!wsOpen&&moved<6&&hover){const hit=hitTest(hover);if(hit)startDive(hit,e.clientX,e.clientY);}
   drag=null;});
 ov.addEventListener("pointerleave",()=>{hover=null;drag=null;ov.classList.remove("drag");});
 document.getElementById("recenter").onclick=()=>panTarget={x:0,y:0};
@@ -312,7 +375,7 @@ function startDive(p,clientX,clientY){
   dive={t0:performance.now(),dur:900,p,cssx:clientX,cssy:clientY,opened:false};
   cam.fpx=clientX*dpr;cam.fpy=clientY*dpr;
   cam.fx=cam.fpx/W;cam.fy=(H-cam.fpy)/H; // GL focus (y-flipped)
-  wash.style.setProperty("--acc",p.accent);
+  wash.style.setProperty("--acc",p.id==="orch1"?"#1d1fe6":p.accent); // ORCH1 flashes workspace blue
   wash.style.setProperty("--wx",clientX+"px");wash.style.setProperty("--wy",clientY+"px");
 }
 function endDive(){
@@ -407,7 +470,153 @@ function openDetail(p){detailOpen=true;const d=document.getElementById("detail")
 function closeDetail(){detailOpen=false;document.getElementById("detail").classList.remove("on");history.replaceState(null,"","#");endDive();}
 document.getElementById("d-back").onclick=closeDetail;
 document.getElementById("detail").addEventListener("click",e=>{if(e.target.id==="detail")closeDetail();});
-addEventListener("keydown",e=>{if(e.key==="Escape"&&detailOpen)closeDetail();});
+addEventListener("keydown",e=>{if(e.key!=="Escape")return;
+  if(detailOpen)closeDetail();else if(wsOpen)closeWorkspace();});
+
+// ---------- ORCH1 agent workspace — opaque blue halftone canvas over the black void ----------
+const ws=document.getElementById("ws"),wsCv=document.getElementById("wsvoid"),wsCtx=wsCv.getContext("2d");
+let wsOpen=false,wsDpr=1,wsW=0,wsH=0,wsZ=10,wsSpawnN=0,wsFrame=0;
+const wsPan={x:0,y:0}; // canvas-space pan — drag the blue void around like the main one
+function wsResize(){wsDpr=Math.min(devicePixelRatio||1,1.5);const r=ws.getBoundingClientRect();
+  wsCv.width=Math.max(1,Math.round(r.width*wsDpr));wsCv.height=Math.max(1,Math.round(r.height*wsDpr));
+  wsW=wsCv.width;wsH=wsCv.height;}
+addEventListener("resize",()=>{if(wsOpen)wsResize();});
+function wsFbm(x,y){let s=0,a=.5;for(let i=0;i<4;i++){s+=a*valueNoise2(x,y);x*=2.03;y*=2.03;a*=.5;}return s;}
+function drawWs(t){
+  wsFrame++;if(wsFrame%2)return;                 // ~30fps — plenty for slow grain
+  wsCtx.setTransform(1,0,0,1,0,0);
+  wsCtx.fillStyle="#1d1fe6";wsCtx.fillRect(0,0,wsW,wsH); // opaque base — nothing shows through
+  const c=6*wsDpr,px=wsPan.x*wsDpr,py=wsPan.y*wsDpr;
+  for(let y=0;y<wsH;y+=c)for(let x=0;x<wsW;x+=c){
+    const gx=(x-px)/c,gy=(y-py)/c;
+    const clouds=wsFbm(gx*0.045+t*0.05,gy*0.045);
+    const fine=valueNoise2(gx*0.8,gy*0.8+t*0.4);
+    let L=clouds*0.9+(fine-0.5)*0.35;L=Math.max(0,Math.min(1,L));
+    const r=L*L*c*0.62;if(r<0.5)continue;        // halftone: dot grows where field is dense
+    const a=0.85*(0.35+0.65*L);
+    wsCtx.fillStyle="rgba("+(200+Math.round(40*fine))+","+(212+Math.round(35*fine))+",255,"+a.toFixed(3)+")";
+    wsCtx.fillRect(x+(c-r)/2,y+(c-r)/2,r,r);
+  }
+}
+
+const WS_NAMES=["Nyx","Orin","Vela","Caspian","Lyra","Atlas","Sable","Quill","Ember","Wren","Halcyon","Dune","Onyx","Sol","Reef"];
+const WS_GLYPHS=["@","#","%","&","*","+","◆","●","▲","■","◈","§"];
+const WS_TAGS=["orch","fabric","recon","synth","audit","weave"];
+function wsRand(a){return a[Math.floor(Math.random()*a.length)];}
+function wsFocus(win){wsZ++;win.style.zIndex=wsZ;
+  ws.querySelectorAll(".ws-win").forEach(w=>w.classList.remove("focus"));win.classList.add("focus");}
+function wsAgent(){
+  const name=wsRand(WS_NAMES),glyph=wsRand(WS_GLYPHS),tag=wsRand(WS_TAGS);
+  const win=document.createElement("div");win.className="ws-win";
+  const r=ws.getBoundingClientRect();
+  // cascade to the upper-left of the spawn node so the + stays visible
+  const ox=r.width/2-460+(wsSpawnN%5)*30,oy=r.height/2-250+(wsSpawnN%5)*26;
+  win.style.left=Math.max(12,ox)+"px";win.style.top=Math.max(12,oy)+"px";
+  wsSpawnN++;
+  win.innerHTML=
+    '<div class="ws-bar">'+
+      '<div class="ws-avatar">'+glyph+'</div>'+
+      '<div class="ws-name">'+name+'</div>'+
+      '<div class="ws-tag">'+tag+'-'+String(1000+Math.floor(Math.random()*8999))+'</div>'+
+      '<div class="ws-ctrls">'+
+        '<button class="ws-lower" title="lower">–</button>'+
+        '<button class="ws-fill" title="fill">▢</button>'+
+        '<button class="ws-x" title="close">×</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="ws-body">'+
+      '<div class="ws-bodycrt"></div>'+
+      '<div class="ws-term"><span class="p">'+name.toLowerCase()+'@orrery</span>:~$ claude<br>'+
+        '<span class="m">summoned. reading working dir…</span><br>'+
+        '<span class="p">›</span> ask me about ORCH1 <span class="c"></span></div>'+
+    '</div>';
+  ws.appendChild(win);
+  win.animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1)",opacity:1}],
+    {duration:340,easing:"cubic-bezier(.2,.7,.2,1)"});
+  wsFocus(win);wsWire(win);return win;
+}
+function wsWire(win){
+  const bar=win.querySelector(".ws-bar"),body=win.querySelector(".ws-body");let prev=null;
+  win.addEventListener("pointerdown",()=>wsFocus(win));
+  win.querySelector(".ws-x").onclick=e=>{e.stopPropagation();
+    win.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.92)"}],{duration:200}).onfinish=()=>win.remove();};
+  win.querySelector(".ws-fill").onclick=e=>{e.stopPropagation();
+    if(win.classList.contains("lowered"))return;
+    if(win.classList.contains("max")){win.classList.remove("max");
+      if(prev){win.style.left=prev.l;win.style.top=prev.t;win.style.width=prev.w;body.style.height="200px";}
+    }else{prev={l:win.style.left,t:win.style.top,w:win.style.width};
+      const r=ws.getBoundingClientRect();
+      win.classList.add("max");win.style.left="12px";win.style.top="12px";
+      win.style.width=(r.width-24)+"px";body.style.height=(r.height-70)+"px";}
+  };
+  win.querySelector(".ws-lower").onclick=e=>{e.stopPropagation();win.classList.add("lowered");};
+  let drag=null;
+  bar.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".ws-ctrls"))return;
+    if(win.classList.contains("max"))return;
+    wsFocus(win);
+    const r=win.getBoundingClientRect(),wr=ws.getBoundingClientRect();
+    drag={dx:e.clientX-r.left,dy:e.clientY-r.top,moved:0,wr};
+    bar.classList.add("grab");try{bar.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  bar.addEventListener("pointermove",e=>{
+    if(!drag)return;
+    const nx=e.clientX-drag.wr.left-drag.dx,ny=e.clientY-drag.wr.top-drag.dy;
+    drag.moved+=Math.abs(e.movementX)+Math.abs(e.movementY);
+    const maxX=drag.wr.width-win.offsetWidth-4,maxY=drag.wr.height-win.offsetHeight-4;
+    win.style.left=Math.max(4,Math.min(maxX,nx))+"px";
+    win.style.top=Math.max(4,Math.min(maxY,ny))+"px";
+  });
+  bar.addEventListener("pointerup",()=>{
+    bar.classList.remove("grab");
+    if(drag&&drag.moved<5&&win.classList.contains("lowered")){win.classList.remove("lowered");body.style.height="200px";wsFocus(win);}
+    drag=null;
+  });
+}
+
+// pan the workspace interior — background drag moves the blue void AND the windows (bounded world)
+let wsPanDrag=null;
+ws.addEventListener("pointerdown",e=>{
+  if(e.target.closest(".ws-win")||e.target.closest("#wsspawn")||e.target.closest("#wsclose"))return;
+  wsPanDrag={x:e.clientX,y:e.clientY};ws.classList.add("pan");
+  try{ws.setPointerCapture(e.pointerId);}catch(_){}
+});
+ws.addEventListener("pointermove",e=>{
+  if(!wsPanDrag)return;
+  const r=ws.getBoundingClientRect();
+  const dx=e.clientX-wsPanDrag.x,dy=e.clientY-wsPanDrag.y;
+  const nx=Math.max(-r.width*.75,Math.min(r.width*.75,wsPan.x+dx));
+  const ny=Math.max(-r.height*.75,Math.min(r.height*.75,wsPan.y+dy));
+  const ax=nx-wsPan.x,ay=ny-wsPan.y;
+  wsPan.x=nx;wsPan.y=ny;
+  ws.querySelectorAll(".ws-win").forEach(w=>{
+    w.style.left=(parseFloat(w.style.left)+ax)+"px";
+    w.style.top=(parseFloat(w.style.top)+ay)+"px";
+  });
+  wsPanDrag={x:e.clientX,y:e.clientY};
+});
+function wsPanEnd(){wsPanDrag=null;ws.classList.remove("pan");}
+ws.addEventListener("pointerup",wsPanEnd);
+ws.addEventListener("pointercancel",wsPanEnd);
+
+function openWorkspace(){
+  if(wsOpen)return;wsOpen=true;
+  document.getElementById("ui").style.visibility="hidden"; // recenter button pans the map behind — hide it
+  ws.style.display="block";wsResize();
+  if(!ws.querySelector(".ws-win"))wsAgent();     // seed one agent so it's never empty
+  requestAnimationFrame(()=>ws.classList.add("on"));
+  history.replaceState(null,"","#orch1");
+}
+function closeWorkspace(){
+  if(!wsOpen)return;wsOpen=false;
+  document.getElementById("ui").style.visibility="";
+  ws.classList.remove("on");
+  setTimeout(()=>{if(!wsOpen)ws.style.display="none";},480);
+  history.replaceState(null,"","#");
+  endDive();
+}
+document.getElementById("wsclose").onclick=closeWorkspace;
+document.getElementById("wsspawn").addEventListener("click",()=>wsAgent());
 
 // ---------- main loop ----------
 function render(now){
@@ -416,7 +625,8 @@ function render(now){
 
   // dive camera
   if(dive){const dp=Math.min(1,(now-dive.t0)/dive.dur);cam.zoom=1+easeIn(dp)*7;
-    if(dp>0.5&&!dive.opened){dive.opened=true;openDetail(dive.p);}
+    if(dp>0.5&&!dive.opened){dive.opened=true;
+      if(dive.p.id==="orch1")openWorkspace();else openDetail(dive.p);}
     wash.style.opacity=String(0.55*Math.sin(Math.min(1,dp)*Math.PI));
   }
   // undive camera — eased zoom back out after closing a constellation
@@ -429,6 +639,9 @@ function render(now){
   // void — pans with the camera (world-stable) like the stars/constellations.
   if(glOk){gl.useProgram(prog);gl.uniform1f(uni.uTime,t);gl.uniform2f(uni.uPan,-pan.x,pan.y);
     gl.uniform1f(uni.uZoom,cam.zoom);gl.uniform2f(uni.uFocus,cam.fx,cam.fy);gl.drawArrays(gl.TRIANGLES,0,3);}
+
+  // ORCH1 workspace — its blue halftone void animates while open
+  if(wsOpen)drawWs(t);
 
   let beat,reveal=0,titleAlpha=0,zoomP=0,interactive=false,titleH=Math.min(W*0.1,H*0.19);
   const T=boot.T;
@@ -500,7 +713,8 @@ function render(now){
 }
 resize();
 requestAnimationFrame(render);
-addEventListener("load",()=>{const h=location.hash.slice(1);const p=MANIFEST.projects.find(x=>x.id===h);if(p){boot.skip();setTimeout(()=>openDetail(p),200);}});
+addEventListener("load",()=>{const h=location.hash.slice(1);const p=MANIFEST.projects.find(x=>x.id===h);
+  if(p){boot.skip();setTimeout(()=>{if(p.id==="orch1")openWorkspace();else openDetail(p);},200);}});
 </script>
 </body>
 </html>

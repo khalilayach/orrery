@@ -1,5 +1,15 @@
 # Project instructions
 
+## Testing
+
+- Run tests: `npm test` (Playwright e2e, headless Chromium). Specs live in `tests/`.
+- See TESTING.md for conventions.
+- 100% test coverage is the goal — tests make vibe coding safe.
+- When adding a feature or interaction, add an e2e test for it.
+- When fixing a bug, add a regression test that reproduces it.
+- When adding a conditional behavior, test both paths.
+- Never commit code that makes existing tests fail.
+
 ## gstack
 
 The gstack skill suite lives at `~/.claude/skills/gstack/`. Each subfolder is a skill

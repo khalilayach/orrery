@@ -1,0 +1,16 @@
+{
+  "name": "orrery",
+  "version": "1.0.0",
+  "description": "Orrery — interactive portfolio: ASCII void, constellations, ORCH1 agent workspace",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  },
+  "private": true
+}

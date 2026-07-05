@@ -96,12 +96,12 @@
     letter-spacing:.12em;color:#1113b8;background:#fff;border:1px solid #c9ccf5;border-radius:var(--radius-sm);
     padding:6px 10px;cursor:pointer}
   #wsclose:hover{background:#eef0ff}
-  #wsspawn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;
+  #wsspawn{position:absolute;right:32px;bottom:32px;z-index:3;
     width:72px;height:72px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
     color:#1113b8;font-size:30px;font-weight:300;background:#fff;border:1px solid #c9ccf5;
     box-shadow:0 8px 26px -10px rgba(4,4,60,.6);animation:wspulse 2.8s ease-in-out infinite;transition:transform .15s}
-  #wsspawn:hover{transform:translate(-50%,-50%) scale(1.07)}
-  #wsspawn .hint{position:absolute;top:84px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  #wsspawn:hover{transform:scale(1.07)}
+  #wsspawn .hint{position:absolute;bottom:84px;right:0;white-space:nowrap;
     font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:#c6caff}
   @keyframes wspulse{0%,100%{box-shadow:0 8px 26px -10px rgba(4,4,60,.55)}50%{box-shadow:0 8px 34px -6px rgba(255,255,255,.45)}}
   .ws-win{position:absolute;width:380px;z-index:10;border-radius:9px;overflow:hidden;background:#fff;
@@ -124,11 +124,22 @@
     transition:height .34s cubic-bezier(.4,0,.2,1),transform .34s cubic-bezier(.4,0,.2,1),opacity .28s}
   .ws-bodycrt{position:absolute;inset:0;pointer-events:none;
     background:repeating-linear-gradient(0deg,rgba(29,31,230,.05) 0 1px,transparent 1px 3px);opacity:.7}
-  .ws-term{position:absolute;inset:0;padding:12px 14px;font-size:.72rem;line-height:1.55;color:#1a1cd8;overflow:auto}
+  .ws-term{position:absolute;top:0;left:0;right:0;bottom:34px;padding:12px 14px;font-size:.72rem;line-height:1.55;color:#1a1cd8;overflow:auto;overflow-wrap:break-word}
   .ws-term .p{color:#1113b8;font-weight:600}
   .ws-term .m{color:#6b6ee6}
   .ws-term .c{display:inline-block;width:7px;height:13px;background:#1a1cd8;vertical-align:-2px;animation:wsblink 1s steps(1) infinite}
   @keyframes wsblink{50%{opacity:0}}
+  .ws-term div{white-space:pre-wrap}
+  .ws-term .u{color:#1113b8;font-weight:600}
+  .ws-term .a{color:#1a1cd8}
+  .ws-term .t{color:#8a8ddd}
+  .ws-term .s{color:#7b3fe4;font-weight:600}
+  .ws-term .e{color:#c8394d}
+  .ws-input{position:absolute;left:0;right:0;bottom:0;height:34px;display:flex;align-items:center;gap:7px;
+    padding:0 12px;border-top:1px solid #dfe2ff;background:#f7f8ff;z-index:2}
+  .ws-input .pfx{color:#1113b8;font-weight:700;font-size:.72rem}
+  .ws-input input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:var(--mono);font-size:.72rem;color:#1a1cd8}
+  .ws-input input::placeholder{color:#9ba0e8}
   .ws-win.lowered{width:212px}
   .ws-win.lowered .ws-body{height:0;opacity:0;transform:perspective(600px) rotateX(-82deg) scaleY(.05)}
   .ws-win.lowered .ws-ctrls{opacity:0;pointer-events:none;width:0;overflow:hidden}
@@ -503,11 +514,62 @@ const WS_NAMES=["Nyx","Orin","Vela","Caspian","Lyra","Atlas","Sable","Quill","Em
 const WS_GLYPHS=["@","#","%","&","*","+","◆","●","▲","■","◈","§"];
 const WS_TAGS=["orch","fabric","recon","synth","audit","weave"];
 function wsRand(a){return a[Math.floor(Math.random()*a.length)];}
+// ---- real Claude Code backend (server/agent-server.mjs) ----
+const AGENT_PORT=new URLSearchParams(location.search).get("agents")||"57253";
+const AGENT_API="http://127.0.0.1:"+AGENT_PORT;
+const wsUsedNames=new Set();
+function wsPickName(){
+  const free=WS_NAMES.filter(n=>!wsUsedNames.has(n));
+  let name=free.length?wsRand(free):wsRand(WS_NAMES)+(2+Math.floor(Math.random()*98));
+  wsUsedNames.add(name);return name;
+}
+function wsPut(term,cls,text){const d=document.createElement("div");d.className=cls;d.textContent=text;
+  term.appendChild(d);term.scrollTop=term.scrollHeight;return d;}
+async function wsConnect(win,name){
+  const term=win.querySelector(".ws-term"),inp=win.querySelector(".ws-input input");
+  let thinking=null;const clearThink=()=>{if(thinking){thinking.remove();thinking=null;}};
+  const send=text=>fetch(AGENT_API+"/session/"+win.dataset.sid+"/input",
+    {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({text})})
+    .catch(()=>wsPut(term,"e","✕ send failed — is the agent server still running?"));
+  inp.addEventListener("keydown",e=>{
+    if(e.key==="Escape"){inp.blur();e.stopPropagation();return;}
+    if(e.key!=="Enter")return;
+    const v=inp.value.trim();if(!v)return;inp.value="";
+    wsPut(term,"u","› "+v);
+    if(win.dataset.sid)send(v);
+    else wsPut(term,"e","agent server offline — run `npm run agents`, then summon a new agent");
+  });
+  try{
+    const r=await fetch(AGENT_API+"/session",{method:"POST",
+      headers:{"content-type":"application/json"},body:JSON.stringify({name})});
+    if(!r.ok)throw new Error("session create failed");
+    const sess=await r.json();win.dataset.sid=sess.id;
+    const es=new EventSource(AGENT_API+"/session/"+sess.id+"/events");win._es=es;
+    es.onmessage=ev=>{
+      const m=JSON.parse(ev.data);
+      if(m.type==="hello"){wsPut(term,"m","connected · "+m.cwd);return;}
+      if(m.type==="meta"&&m.text==="thinking…"){clearThink();thinking=wsPut(term,"m","thinking…");return;}
+      clearThink();
+      if(m.type==="meta")wsPut(term,"m",m.text);
+      else if(m.type==="text")wsPut(term,"a",m.text);
+      else if(m.type==="tool")wsPut(term,"t","▸ "+m.name+(m.hint?": "+m.hint:""));
+      else if(m.type==="swarm")wsPut(term,"s","⇄ "+m.from+": "+m.text);
+      else if(m.type==="error")wsPut(term,"e","✕ "+m.text);
+    };
+  }catch(_){
+    wsPut(term,"e","agent server offline — run `npm run agents` to give this terminal a real Claude brain");
+  }
+}
+function wsDisconnect(win){
+  wsUsedNames.delete(win.dataset.name);
+  if(win._es)win._es.close();
+  if(win.dataset.sid)fetch(AGENT_API+"/session/"+win.dataset.sid,{method:"DELETE"}).catch(()=>{});
+}
 function wsFocus(win){wsZ++;win.style.zIndex=wsZ;
   ws.querySelectorAll(".ws-win").forEach(w=>w.classList.remove("focus"));win.classList.add("focus");}
 function wsAgent(){
-  const name=wsRand(WS_NAMES),glyph=wsRand(WS_GLYPHS),tag=wsRand(WS_TAGS);
-  const win=document.createElement("div");win.className="ws-win";
+  const name=wsPickName(),glyph=wsRand(WS_GLYPHS),tag=wsRand(WS_TAGS);
+  const win=document.createElement("div");win.className="ws-win";win.dataset.name=name;
   const r=ws.getBoundingClientRect();
   // cascade to the upper-left of the spawn node so the + stays visible
   const ox=r.width/2-460+(wsSpawnN%5)*30,oy=r.height/2-250+(wsSpawnN%5)*26;
@@ -526,24 +588,24 @@ function wsAgent(){
     '</div>'+
     '<div class="ws-body">'+
       '<div class="ws-bodycrt"></div>'+
-      '<div class="ws-term"><span class="p">'+name.toLowerCase()+'@orrery</span>:~$ claude<br>'+
-        '<span class="m">summoned. reading working dir…</span><br>'+
-        '<span class="p">›</span> ask me about ORCH1 <span class="c"></span></div>'+
+      '<div class="ws-term"><div><span class="p">'+name.toLowerCase()+'@orrery</span>:~$ claude</div></div>'+
+      '<div class="ws-input"><span class="pfx">›</span>'+
+        '<input placeholder="ask · cd &lt;path&gt; · @name msg · @all msg" spellcheck="false" autocomplete="off"></div>'+
     '</div>';
   ws.appendChild(win);
   win.animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1)",opacity:1}],
     {duration:340,easing:"cubic-bezier(.2,.7,.2,1)"});
-  wsFocus(win);wsWire(win);return win;
+  wsFocus(win);wsWire(win);wsConnect(win,name);return win;
 }
 function wsWire(win){
   const bar=win.querySelector(".ws-bar"),body=win.querySelector(".ws-body");let prev=null;
   win.addEventListener("pointerdown",()=>wsFocus(win));
-  win.querySelector(".ws-x").onclick=e=>{e.stopPropagation();
+  win.querySelector(".ws-x").onclick=e=>{e.stopPropagation();wsDisconnect(win);
     win.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.92)"}],{duration:200}).onfinish=()=>win.remove();};
   win.querySelector(".ws-fill").onclick=e=>{e.stopPropagation();
     if(win.classList.contains("lowered"))return;
     if(win.classList.contains("max")){win.classList.remove("max");
-      if(prev){win.style.left=prev.l;win.style.top=prev.t;win.style.width=prev.w;body.style.height="200px";}
+      if(prev){win.style.left=prev.l;win.style.top=prev.t;win.style.width=prev.w;body.style.height="";}
     }else{prev={l:win.style.left,t:win.style.top,w:win.style.width};
       const r=ws.getBoundingClientRect();
       win.classList.add("max");win.style.left="12px";win.style.top="12px";
@@ -569,7 +631,7 @@ function wsWire(win){
   });
   bar.addEventListener("pointerup",()=>{
     bar.classList.remove("grab");
-    if(drag&&drag.moved<5&&win.classList.contains("lowered")){win.classList.remove("lowered");body.style.height="200px";wsFocus(win);}
+    if(drag&&drag.moved<5&&win.classList.contains("lowered")){win.classList.remove("lowered");body.style.height="";wsFocus(win);}
     drag=null;
   });
 }

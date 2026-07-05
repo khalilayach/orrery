@@ -85,11 +85,27 @@ test('lower folds a window into a chip; clicking the chip raises it', async ({ p
   await expect(page.locator('.ws-win.lowered')).toHaveCount(0);
 });
 
+test('lowering a second time still fully collapses the body (regression)', async ({ page }) => {
+  // Prior bug: raising a lowered window set an inline body height that
+  // outranked the .lowered CSS rule, so the second lower left the body
+  // stuck at its raised height instead of collapsing to 0.
+  await gotoWorkspace(page);
+  await page.click('.ws-win .ws-lower');
+  await page.click('.ws-win.lowered .ws-bar'); // raise
+  await expect(page.locator('.ws-win.lowered')).toHaveCount(0);
+  await page.click('.ws-win .ws-lower'); // lower again
+  await expect(page.locator('.ws-win.lowered')).toHaveCount(1);
+  await expect.poll(async () =>
+    page.evaluate(() => document.querySelector('.ws-win.lowered .ws-body').getBoundingClientRect().height)
+  ).toBeLessThan(1);
+});
+
 test('dragging the canvas background pans windows with the world', async ({ page }) => {
   await gotoWorkspace(page);
   const before = await page.evaluate(() => parseFloat(document.querySelector('.ws-win').style.left));
   const box = await page.locator('#ws').boundingBox();
-  const sx = box.x + box.width - 60, sy = box.y + box.height - 60; // background spot
+  // background spot: bottom-LEFT (bottom-right is the summon-agent button now)
+  const sx = box.x + 60, sy = box.y + box.height - 60;
   await page.mouse.move(sx, sy);
   await page.mouse.down();
   await page.mouse.move(sx - 150, sy - 50, { steps: 5 });

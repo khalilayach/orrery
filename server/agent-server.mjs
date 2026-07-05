@@ -315,6 +315,14 @@ const server = createServer(async (req, res) => {
   }
 });
 
+server.on("error", e => {
+  if (e.code === "EADDRINUSE") {
+    console.error(`port ${PORT} is already in use — an agent server is likely running.`);
+    console.error(`check: curl http://127.0.0.1:${PORT}/health · stop it via the pid in .gstack/terminal-agent-pid (taskkill /PID <pid> /F)`);
+    process.exit(1);
+  }
+  throw e;
+});
 server.listen(PORT, "127.0.0.1", () => {
   mkdirSync(GSTACK, { recursive: true });
   writeFileSync(resolve(GSTACK, "terminal-port"), String(PORT));

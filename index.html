@@ -199,7 +199,7 @@ const MANIFEST={ projects:[
       ["Redundancy","<code>MSTP</code> for loop-free L2 with deliberate per-instance root placement · <code>LACP</code> EtherChannels bonding uplinks into one logical pipe · <code>HSRP</code> first-hop gateway redundancy across the core pair."],
       ["What it proves","Built and broke it on purpose: link, switch, and gateway failover converge with no black-holing. Fabric stays up when pieces don't."],
     ] },
-  { id:"orch1", name:"ORCH1", accent:"#F45BC4", glyph:"@",
+  { id:"orch1", name:"ORCH1", accent:"#1d1fe6", glyph:"@",
     cx:0.70, cy:0.63, nest:[0.57,0.53],
     nodes:[[0,0],[0.09,-0.06],[0.15,0.01],[0.07,0.07]],
     edges:[[0,1],[1,2],[2,3],[3,0],[0,2]],
@@ -386,7 +386,7 @@ function startDive(p,clientX,clientY){
   dive={t0:performance.now(),dur:900,p,cssx:clientX,cssy:clientY,opened:false};
   cam.fpx=clientX*dpr;cam.fpy=clientY*dpr;
   cam.fx=cam.fpx/W;cam.fy=(H-cam.fpy)/H; // GL focus (y-flipped)
-  wash.style.setProperty("--acc",p.id==="orch1"?"#1d1fe6":p.accent); // ORCH1 flashes workspace blue
+  wash.style.setProperty("--acc",p.accent); // ORCH1's accent IS the workspace blue
   wash.style.setProperty("--wx",clientX+"px");wash.style.setProperty("--wy",clientY+"px");
 }
 function endDive(){
@@ -567,6 +567,8 @@ function wsDisconnect(win){
 }
 function wsFocus(win){wsZ++;win.style.zIndex=wsZ;
   ws.querySelectorAll(".ws-win").forEach(w=>w.classList.remove("focus"));win.classList.add("focus");}
+function wsFocusInput(win){const i=win.querySelector(".ws-input input");
+  if(i&&!win.classList.contains("lowered"))i.focus();}
 function wsAgent(){
   const name=wsPickName(),glyph=wsRand(WS_GLYPHS),tag=wsRand(WS_TAGS);
   const win=document.createElement("div");win.className="ws-win";win.dataset.name=name;
@@ -595,11 +597,14 @@ function wsAgent(){
   ws.appendChild(win);
   win.animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1)",opacity:1}],
     {duration:340,easing:"cubic-bezier(.2,.7,.2,1)"});
-  wsFocus(win);wsWire(win);wsConnect(win,name);return win;
+  wsFocus(win);wsWire(win);wsConnect(win,name);wsFocusInput(win);return win;
 }
 function wsWire(win){
   const bar=win.querySelector(".ws-bar"),body=win.querySelector(".ws-body");let prev=null;
   win.addEventListener("pointerdown",()=>wsFocus(win));
+  // terminal feel: clicking anywhere in the window (except its control
+  // buttons) puts the caret in the input line
+  win.addEventListener("pointerup",e=>{if(!e.target.closest(".ws-ctrls"))wsFocusInput(win);});
   win.querySelector(".ws-x").onclick=e=>{e.stopPropagation();wsDisconnect(win);
     win.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.92)"}],{duration:200}).onfinish=()=>win.remove();};
   win.querySelector(".ws-fill").onclick=e=>{e.stopPropagation();
@@ -631,7 +636,7 @@ function wsWire(win){
   });
   bar.addEventListener("pointerup",()=>{
     bar.classList.remove("grab");
-    if(drag&&drag.moved<5&&win.classList.contains("lowered")){win.classList.remove("lowered");body.style.height="";wsFocus(win);}
+    if(drag&&drag.moved<5&&win.classList.contains("lowered")){win.classList.remove("lowered");body.style.height="";wsFocus(win);wsFocusInput(win);}
     drag=null;
   });
 }

@@ -100,6 +100,21 @@ test('lowering a second time still fully collapses the body (regression)', async
   ).toBeLessThan(1);
 });
 
+test('terminal input: auto-focused on spawn, click-anywhere refocuses, keys land', async ({ page }) => {
+  await gotoWorkspace(page);
+  // seeded window's input is focused immediately — you can just start typing
+  expect(await page.evaluate(() => document.activeElement.matches('.ws-input input'))).toBe(true);
+  // clicking the blue canvas background drops focus…
+  const box = await page.locator('#ws').boundingBox();
+  await page.mouse.click(box.x + 60, box.y + box.height - 60);
+  expect(await page.evaluate(() => document.activeElement.matches('.ws-input input'))).toBe(false);
+  // …and clicking anywhere on the window (the output area, like a real
+  // terminal) brings it back; real keystrokes land in the input
+  await page.click('.ws-win .ws-term');
+  await page.keyboard.type('hello agent');
+  await expect(page.locator('.ws-input input')).toHaveValue('hello agent');
+});
+
 test('dragging the canvas background pans windows with the world', async ({ page }) => {
   await gotoWorkspace(page);
   const before = await page.evaluate(() => parseFloat(document.querySelector('.ws-win').style.left));
@@ -116,6 +131,10 @@ test('dragging the canvas background pans windows with the world', async ({ page
 
 test('ESC closes the workspace and restores the map UI', async ({ page }) => {
   await gotoWorkspace(page);
+  // terminal input auto-focuses on spawn: first ESC leaves typing mode…
+  await page.keyboard.press('Escape');
+  await expect.poll(async () => page.evaluate(() => wsOpen)).toBe(true);
+  // …second ESC closes the workspace
   await page.keyboard.press('Escape');
   await expect.poll(async () => page.evaluate(() => wsOpen)).toBe(false);
   await expect.poll(async () =>

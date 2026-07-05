@@ -112,16 +112,25 @@ bottom of a window. Without the server running, terminals degrade to an offline 
 | any text            | a real Claude turn, streamed back (tool calls shown as `▸ Bash: …` lines) |
 | `cd <path>` / `cd ~`| repoint this terminal at ANY folder on the machine; the agent reads/writes there (starts a fresh conversation rooted in that folder) |
 | `pwd`               | show the terminal's current folder |
-| `@Name message`     | send a swarm message to another terminal's agent |
-| `@all message`      | broadcast to every other terminal |
+| `@Name message`     | message another terminal (requires a comm or boss wire) |
+| `@all message`      | broadcast to every wired terminal |
 
-## Swarm
+## Swarm — wired by hand
 
-Each session gets a system prompt telling it its agent name, who else is online, and how
-to message peers via `POST /swarm/send` (internal token, regenerated each server start,
-written to `.gstack/terminal-internal-token`). Incoming swarm messages arrive as
-`[swarm message from X]` turns — so one terminal can manage while others build, and they
-reply to each other on their own.
+Terminals only interact when you wire them together. Every window has three port dots on
+its right edge; drag a dot onto another terminal to draw a wire (click a wire to cut it):
+
+| dot | wire | meaning |
+|-----|------|---------|
+| blue `comm` | white line | both agents can message each other |
+| teal `read` | dashed cyan arrow | the source agent can read the target's chat (`/swarm/read`) |
+| amber `boss` | amber arrow | source commands target: its messages arrive as `[instruction from your manager X]` operator-level orders; the worker reports back |
+
+All routing — user-typed `@Name`/`@all` and agent-initiated `POST /swarm/send` — is
+gated by these links server-side (comm or boss allows messaging; read is read-only).
+Each session's system prompt is rebuilt every turn from the current wiring, so agents
+always know who they can talk to, who they manage, and who their manager is. The
+internal token regenerates each server start (`.gstack/terminal-internal-token`).
 
 ## Architecture
 

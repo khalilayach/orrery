@@ -77,32 +77,114 @@ test('cd points the terminal at any folder; bad paths are rejected', async ({ pa
   await expect(win.locator('.ws-term')).toContainText('no such directory');
 });
 
-test('swarm: @name routes between terminals and the target agent responds', async ({ page }) => {
-  await gotoWired(page);
+/** Spawn a second window, park it clear of the first, return [w1, w2]. */
+async function twoTerminals(page) {
   await page.click('#wsspawn');
   await expect(page.locator('.ws-win')).toHaveCount(2);
   const w1 = page.locator('.ws-win').nth(0), w2 = page.locator('.ws-win').nth(1);
   await expect(w2.locator('.ws-term')).toContainText('connected ·', { timeout: 5000 });
+  await page.evaluate(() => {
+    const w = document.querySelectorAll('.ws-win')[1];
+    w.style.left = '660px'; w.style.top = '60px';
+  });
+  return [w1, w2];
+}
+
+/** Create a link server-side using the windows' session ids. */
+async function apiLink(page, fromIdx, toIdx, type) {
+  await page.evaluate(async ({ fromIdx, toIdx, type }) => {
+    const wins = document.querySelectorAll('.ws-win');
+    await fetch('http://127.0.0.1:57312/link', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ from: wins[fromIdx].dataset.sid, to: wins[toIdx].dataset.sid, type }),
+    });
+  }, { fromIdx, toIdx, type });
+}
+
+test('unlinked terminals cannot message each other', async ({ page }) => {
+  await gotoWired(page);
+  const [w1, w2] = await twoTerminals(page);
+  const n2 = (await w2.locator('.ws-name').textContent()).trim();
+  await typeIn(page, w1, `@${n2} psst`);
+  await expect(w1.locator('.ws-term')).toContainText('not linked to ' + n2);
+  await expect(w2.locator('.ws-term')).not.toContainText('psst');
+});
+
+test('dragging the comm dot wires two terminals; @name then routes; clicking the line unwires', async ({ page }) => {
+  await gotoWired(page);
+  const [w1, w2] = await twoTerminals(page);
   const n1 = (await w1.locator('.ws-name').textContent()).trim();
   const n2 = (await w2.locator('.ws-name').textContent()).trim();
+  // drag the blue comm dot from w1 onto w2 → a wire appears
+  const pb = await w1.locator('.ws-port[data-type="comm"]').boundingBox();
+  const tb = await w2.boundingBox();
+  await page.mouse.move(pb.x + pb.width / 2, pb.y + pb.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(tb.x + tb.width / 2, tb.y + tb.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await expect(page.locator('#wslinks path.vis')).toHaveCount(1);
+  await expect(w1.locator('.ws-term')).toContainText('linked: can now message ' + n2);
+  // linked → routing works
   await typeIn(page, w1, `@${n2} start on the parser`);
   await expect(w1.locator('.ws-term')).toContainText('sent to ' + n2);
   await expect(w2.locator('.ws-term')).toContainText(`⇄ ${n1}: start on the parser`);
-  // the message became a real turn for the target agent
   await expect(w2.locator('.ws-term')).toContainText(`[swarm message from ${n1}] start on the parser`);
+  // clicking the wire removes it and messaging is gated again
+  await page.locator('#wslinks path.hit').click();
+  await expect(page.locator('#wslinks path.vis')).toHaveCount(0);
+  await typeIn(page, w1, `@${n2} again?`);
+  await expect(w1.locator('.ws-term')).toContainText('not linked to ' + n2);
 });
 
-test('swarm: @all fans out to every other terminal', async ({ page }) => {
+test('boss link: messages arrive as operator instructions', async ({ page }) => {
+  await gotoWired(page);
+  const [w1, w2] = await twoTerminals(page);
+  const n1 = (await w1.locator('.ws-name').textContent()).trim();
+  const n2 = (await w2.locator('.ws-name').textContent()).trim();
+  await apiLink(page, 0, 1, 'boss');
+  await typeIn(page, w1, `@${n2} refactor the parser and report back`);
+  await expect(w2.locator('.ws-term')).toContainText(`⚑ order from ${n1}`);
+  await expect(w2.locator('.ws-term')).toContainText(`[instruction from your manager ${n1}] refactor the parser`);
+});
+
+test('swarm: @all fans out to every linked terminal', async ({ page }) => {
   await gotoWired(page);
   await page.click('#wsspawn');
   await page.click('#wsspawn');
   await expect(page.locator('.ws-win')).toHaveCount(3);
+  await expect(page.locator('.ws-win').nth(2).locator('.ws-term')).toContainText('connected ·', { timeout: 5000 });
+  await apiLink(page, 0, 1, 'comm');
+  await apiLink(page, 0, 2, 'comm');
   const w1 = page.locator('.ws-win').nth(0);
   await typeIn(page, w1, '@all status report');
   for (const i of [1, 2]) {
     await expect(page.locator('.ws-win').nth(i).locator('.ws-term'))
       .toContainText('status report', { timeout: 5000 });
   }
+});
+
+test('read link gates transcript access', async ({ request }) => {
+  const token = (await (await request.get(API + '/health')).json()).token;
+  const a = await (await request.post(API + '/session', { data: { name: 'ReaderA' } })).json();
+  const b = await (await request.post(API + '/session', { data: { name: 'ReadeeB' } })).json();
+  await request.post(API + '/session/' + b.id + '/input', { data: { text: 'hello transcript' } });
+  // no link yet → forbidden
+  const denied = await request.get(`${API}/swarm/read?token=${token}&from=ReaderA&target=ReadeeB`);
+  expect(denied.status()).toBe(403);
+  await request.post(API + '/link', { data: { from: a.id, to: b.id, type: 'read' } });
+  await expect.poll(async () => {
+    const r = await (await request.get(`${API}/swarm/read?token=${token}&from=ReaderA&target=ReadeeB`)).json();
+    return r.transcript.join('\n');
+  }).toContain('mock:ReadeeB received: hello transcript'); // mock reply lands ~60ms after input
+  const r = await (await request.get(`${API}/swarm/read?token=${token}&from=ReaderA&target=ReadeeB`)).json();
+  expect(r.transcript.join('\n')).toContain('user: hello transcript');
+  // read link does NOT grant messaging
+  const send = await request.post(API + '/swarm/send', {
+    data: { token, from: 'ReaderA', to: 'ReadeeB', text: 'should be blocked' },
+  });
+  expect(send.status()).toBe(403);
+  await request.delete(API + '/session/' + a.id);
+  await request.delete(API + '/session/' + b.id);
 });
 
 test('offline: terminal degrades gracefully when no server is running', async ({ page }) => {

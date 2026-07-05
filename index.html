@@ -140,6 +140,19 @@
   .ws-input .pfx{color:#1113b8;font-weight:700;font-size:.72rem}
   .ws-input input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:var(--mono);font-size:.72rem;color:#1a1cd8}
   .ws-input input::placeholder{color:#9ba0e8}
+  /* connection ports — drag a dot onto another terminal to wire them together */
+  .ws-ports{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:4}
+  .ws-port{width:13px;height:13px;border-radius:50%;border:2px solid #fff;cursor:crosshair;touch-action:none;
+    box-shadow:0 0 0 1px rgba(6,6,50,.3),0 2px 6px -2px rgba(6,6,50,.55);transition:transform .12s}
+  .ws-port:hover{transform:scale(1.3)}
+  .ws-port[data-type="comm"]{background:#1d1fe6}
+  .ws-port[data-type="read"]{background:#12b8d4}
+  .ws-port[data-type="boss"]{background:#f0a41c}
+  .ws-win.lowered .ws-ports{display:none}
+  #wslinks{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none}
+  #wslinks path.hit{pointer-events:stroke;cursor:pointer;stroke:transparent;stroke-width:14;fill:none}
+  #wslinks path.vis{fill:none;stroke-width:2.5;pointer-events:none}
+  #wslinks path.tmp{fill:none;stroke-width:2;stroke-dasharray:5 5;opacity:.8;pointer-events:none}
   .ws-win.lowered{width:212px}
   .ws-win.lowered .ws-body{height:0;opacity:0;transform:perspective(600px) rotateX(-82deg) scaleY(.05)}
   .ws-win.lowered .ws-ctrls{opacity:0;pointer-events:none;width:0;overflow:hidden}
@@ -181,6 +194,14 @@
 <div id="ws">
   <canvas id="wsvoid"></canvas>
   <div id="wscrt"></div>
+  <svg id="wslinks">
+    <defs>
+      <marker id="arr-read" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#7ef3ff"/></marker>
+      <marker id="arr-boss" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#ffd76b"/></marker>
+    </defs>
+  </svg>
   <div id="wsspawn">+<span class="hint">summon agent</span></div>
   <button id="wsclose">× close</button>
 </div>
@@ -553,7 +574,7 @@ async function wsConnect(win,name){
       if(m.type==="meta")wsPut(term,"m",m.text);
       else if(m.type==="text")wsPut(term,"a",m.text);
       else if(m.type==="tool")wsPut(term,"t","▸ "+m.name+(m.hint?": "+m.hint:""));
-      else if(m.type==="swarm")wsPut(term,"s","⇄ "+m.from+": "+m.text);
+      else if(m.type==="swarm")wsPut(term,"s",(m.boss?"⚑ order from ":"⇄ ")+m.from+": "+m.text);
       else if(m.type==="error")wsPut(term,"e","✕ "+m.text);
     };
   }catch(_){
@@ -564,7 +585,79 @@ function wsDisconnect(win){
   wsUsedNames.delete(win.dataset.name);
   if(win._es)win._es.close();
   if(win.dataset.sid)fetch(AGENT_API+"/session/"+win.dataset.sid,{method:"DELETE"}).catch(()=>{});
+  wsRemoveLinksFor(win);
 }
+
+// ---- terminal wiring: drag a port dot onto another window to link agents ----
+// comm (blue) = both can message · read (teal) = source reads target's chat ·
+// boss (amber) = source commands target like an operator
+const wsLinks=[];
+const wslSvg=document.getElementById("wslinks");
+const WS_LINK_STYLE={
+  comm:{c:"#ffffff",dash:"",arrow:""},
+  read:{c:"#7ef3ff",dash:"7 5",arrow:"url(#arr-read)"},
+  boss:{c:"#ffd76b",dash:"",arrow:"url(#arr-boss)"},
+};
+const WS_LINK_LABEL={comm:"communicate",read:"read",boss:"command"};
+function wsMkPath(cls){const p=document.createElementNS("http://www.w3.org/2000/svg","path");p.setAttribute("class",cls);wslSvg.appendChild(p);return p;}
+// point on `rect`'s border where the segment from `pt` to the rect center crosses
+function wsEdgePoint(rect,pt){
+  const cx=rect.x+rect.w/2,cy=rect.y+rect.h/2,vx=pt.x-cx,vy=pt.y-cy;
+  const k=Math.min(vx?Math.abs(rect.w/2/vx):1e9,vy?Math.abs(rect.h/2/vy):1e9);
+  return{x:cx+vx*Math.min(1,k),y:cy+vy*Math.min(1,k)};
+}
+function wsUpdateLinks(){
+  const wr=ws.getBoundingClientRect();
+  for(const l of wsLinks){
+    const port=l.from.querySelector('.ws-port[data-type="'+l.type+'"]');
+    const anchor=(port&&port.offsetParent?port:l.from).getBoundingClientRect();
+    const p1={x:anchor.left+anchor.width/2-wr.left,y:anchor.top+anchor.height/2-wr.top};
+    const t=l.to.getBoundingClientRect();
+    const p2=wsEdgePoint({x:t.left-wr.left,y:t.top-wr.top,w:t.width,h:t.height},p1);
+    const d=`M${p1.x.toFixed(1)},${p1.y.toFixed(1)}L${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+    l.vis.setAttribute("d",d);l.hit.setAttribute("d",d);
+  }
+}
+function wsRemoveLink(l,silent){
+  const i=wsLinks.indexOf(l);if(i<0)return;
+  wsLinks.splice(i,1);l.vis.remove();l.hit.remove();
+  if(!silent&&l.id)fetch(AGENT_API+"/link/"+l.id,{method:"DELETE"}).catch(()=>{});
+  for(const w of[l.from,l.to])if(w.isConnected)
+    wsPut(w.querySelector(".ws-term"),"m","⌁ "+WS_LINK_LABEL[l.type]+" link removed ("+l.from.dataset.name+" → "+l.to.dataset.name+")");
+}
+function wsRemoveLinksFor(win){
+  for(let i=wsLinks.length-1;i>=0;i--){const l=wsLinks[i];
+    if(l.from===win||l.to===win){wsLinks.splice(i,1);l.vis.remove();l.hit.remove();}}
+}
+async function wsCreateLink(a,b,type){
+  const termA=a.querySelector(".ws-term");
+  if(!a.dataset.sid||!b.dataset.sid){wsPut(termA,"e","✕ can't link — agent server offline");return;}
+  if(wsLinks.some(l=>l.type===type&&((l.from===a&&l.to===b)||(type==="comm"&&l.from===b&&l.to===a))))return;
+  try{
+    const r=await fetch(AGENT_API+"/link",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({from:a.dataset.sid,to:b.dataset.sid,type})});
+    if(!r.ok)throw 0;
+    const {id}=await r.json();
+    const st=WS_LINK_STYLE[type];
+    const vis=wsMkPath("vis"),hit=wsMkPath("hit");
+    vis.setAttribute("stroke",st.c);if(st.dash)vis.setAttribute("stroke-dasharray",st.dash);
+    if(st.arrow)vis.setAttribute("marker-end",st.arrow);
+    const link={id,from:a,to:b,type,vis,hit};
+    hit.addEventListener("click",()=>wsRemoveLink(link));
+    wsLinks.push(link);wsUpdateLinks();
+    const msg={comm:"⌁ linked: can now message ",read:"⌁ linked: you can now read the chat of ",boss:"⌁ linked: you now command "}[type];
+    wsPut(termA,"m",msg+b.dataset.name);
+    wsPut(b.querySelector(".ws-term"),"m",{comm:"⌁ linked: can now message ",read:"⌁ "+a.dataset.name+" can now read your chat",boss:"⌁ "+a.dataset.name+" is now your manager"}[type]+(type==="comm"?a.dataset.name:""));
+  }catch(_){wsPut(termA,"e","✕ link failed");}
+}
+// temp line while dragging from a port
+let wsTmpPath=null;
+function wsTmpLine(port,cx,cy){
+  const wr=ws.getBoundingClientRect(),pr=port.getBoundingClientRect();
+  if(!wsTmpPath){wsTmpPath=wsMkPath("tmp");wsTmpPath.setAttribute("stroke",WS_LINK_STYLE[port.dataset.type].c);}
+  wsTmpPath.setAttribute("d",`M${pr.left+pr.width/2-wr.left},${pr.top+pr.height/2-wr.top}L${cx-wr.left},${cy-wr.top}`);
+}
+function wsClearTmp(){if(wsTmpPath){wsTmpPath.remove();wsTmpPath=null;}}
 function wsFocus(win){wsZ++;win.style.zIndex=wsZ;
   ws.querySelectorAll(".ws-win").forEach(w=>w.classList.remove("focus"));win.classList.add("focus");}
 function wsFocusInput(win){const i=win.querySelector(".ws-input input");
@@ -593,6 +686,11 @@ function wsAgent(){
       '<div class="ws-term"><div><span class="p">'+name.toLowerCase()+'@orrery</span>:~$ claude</div></div>'+
       '<div class="ws-input"><span class="pfx">›</span>'+
         '<input placeholder="ask · cd &lt;path&gt; · @name msg · @all msg" spellcheck="false" autocomplete="off"></div>'+
+    '</div>'+
+    '<div class="ws-ports">'+
+      '<div class="ws-port" data-type="comm" title="drag to a terminal: communicate — both can message each other"></div>'+
+      '<div class="ws-port" data-type="read" title="drag to a terminal: read — this agent can read their chat"></div>'+
+      '<div class="ws-port" data-type="boss" title="drag to a terminal: command — this agent instructs them like an operator"></div>'+
     '</div>';
   ws.appendChild(win);
   win.animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1)",opacity:1}],
@@ -617,6 +715,23 @@ function wsWire(win){
       win.style.width=(r.width-24)+"px";body.style.height=(r.height-70)+"px";}
   };
   win.querySelector(".ws-lower").onclick=e=>{e.stopPropagation();win.classList.add("lowered");};
+  // link ports: drag a dot onto another window to wire the two agents
+  win.querySelectorAll(".ws-port").forEach(port=>{
+    let linking=false;
+    port.addEventListener("pointerdown",e=>{
+      e.stopPropagation();e.preventDefault();linking=true;
+      try{port.setPointerCapture(e.pointerId);}catch(_){}
+      wsTmpLine(port,e.clientX,e.clientY);
+    });
+    port.addEventListener("pointermove",e=>{if(linking)wsTmpLine(port,e.clientX,e.clientY);});
+    port.addEventListener("pointerup",e=>{
+      if(!linking)return;linking=false;wsClearTmp();
+      const hit=document.elementFromPoint(e.clientX,e.clientY);
+      const target=hit&&hit.closest(".ws-win");
+      if(target&&target!==win)wsCreateLink(win,target,port.dataset.type);
+    });
+    port.addEventListener("pointercancel",()=>{linking=false;wsClearTmp();});
+  });
   let drag=null;
   bar.addEventListener("pointerdown",e=>{
     if(e.target.closest(".ws-ctrls"))return;
@@ -644,7 +759,8 @@ function wsWire(win){
 // pan the workspace interior — background drag moves the blue void AND the windows (bounded world)
 let wsPanDrag=null;
 ws.addEventListener("pointerdown",e=>{
-  if(e.target.closest(".ws-win")||e.target.closest("#wsspawn")||e.target.closest("#wsclose"))return;
+  if(e.target.closest(".ws-win")||e.target.closest("#wsspawn")||e.target.closest("#wsclose")
+    ||e.target.closest("#wslinks"))return; // clicking a wire deletes it, not pans
   wsPanDrag={x:e.clientX,y:e.clientY};ws.classList.add("pan");
   try{ws.setPointerCapture(e.pointerId);}catch(_){}
 });
@@ -707,8 +823,9 @@ function render(now){
   if(glOk){gl.useProgram(prog);gl.uniform1f(uni.uTime,t);gl.uniform2f(uni.uPan,-pan.x,pan.y);
     gl.uniform1f(uni.uZoom,cam.zoom);gl.uniform2f(uni.uFocus,cam.fx,cam.fy);gl.drawArrays(gl.TRIANGLES,0,3);}
 
-  // ORCH1 workspace — its blue halftone void animates while open
-  if(wsOpen)drawWs(t);
+  // ORCH1 workspace — its blue halftone void animates while open; link
+  // wires track their windows through drags and pans
+  if(wsOpen){drawWs(t);wsUpdateLinks();}
 
   let beat,reveal=0,titleAlpha=0,zoomP=0,interactive=false,titleH=Math.min(W*0.1,H*0.19);
   const T=boot.T;

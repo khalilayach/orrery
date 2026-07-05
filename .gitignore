@@ -1,3 +1,8 @@
 node_modules/
 test-results/
 playwright-report/
+
+# orrery agent server runtime state (contains the swarm auth token)
+.gstack/terminal-*
+.gstack/claude-available.json
+.gstack/browse-*

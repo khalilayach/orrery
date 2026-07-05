@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Orrery — interactive portfolio: ASCII void, constellations, ORCH1 agent workspace",
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "agents": "node server/agent-server.mjs"
   },
   "keywords": [],
   "author": "",

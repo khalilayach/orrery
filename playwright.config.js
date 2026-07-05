@@ -9,5 +9,12 @@ export default defineConfig({
     headless: true,
     viewport: { width: 1280, height: 720 },
   },
+  // mock agent backend for the terminal e2e tests (deterministic, no API calls)
+  webServer: {
+    command: 'node server/agent-server.mjs',
+    url: 'http://127.0.0.1:57312/health',
+    env: { MOCK_CLAUDE: '1', PORT: '57312' },
+    reuseExistingServer: true,
+  },
   reporter: [['list']],
 });

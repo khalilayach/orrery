@@ -87,3 +87,52 @@ Node script. Confirm it streams a reply **without** an `ANTHROPIC_API_KEY` set �
 really running on your membership. If that works, Phase 2 is de-risked and the whole design holds.
 If it demands a key, check the current SDK README's auth section (or `claude setup-token`)
 before building anything else.
+
+---
+
+# Phase 2 — SHIPPED: real Claude Code terminals (2026-07-05)
+
+Implementation landed. Instead of the Agent SDK, the backend shells out to the installed
+`claude` CLI (`-p --output-format stream-json`), which runs on the local login — no API key.
+
+## Running it
+
+```
+npm run agents     # start the backend (http://127.0.0.1:57253)
+# then open index.html and dive into ORCH1 (or open index.html#orch1)
+```
+
+Every summoned terminal is a live Claude Code session. Type into the input line at the
+bottom of a window. Without the server running, terminals degrade to an offline notice.
+
+## Terminal commands
+
+| input               | effect |
+|---------------------|--------|
+| any text            | a real Claude turn, streamed back (tool calls shown as `▸ Bash: …` lines) |
+| `cd <path>` / `cd ~`| repoint this terminal at ANY folder on the machine; the agent reads/writes there (starts a fresh conversation rooted in that folder) |
+| `pwd`               | show the terminal's current folder |
+| `@Name message`     | send a swarm message to another terminal's agent |
+| `@all message`      | broadcast to every other terminal |
+
+## Swarm
+
+Each session gets a system prompt telling it its agent name, who else is online, and how
+to message peers via `POST /swarm/send` (internal token, regenerated each server start,
+written to `.gstack/terminal-internal-token`). Incoming swarm messages arrive as
+`[swarm message from X]` turns — so one terminal can manage while others build, and they
+reply to each other on their own.
+
+## Architecture
+
+- `server/agent-server.mjs` — zero-dependency Node HTTP + SSE server, 127.0.0.1 only.
+  One session per terminal window: fixed `--session-id` first turn, `--resume` after,
+  spawned in the session's cwd. Sequential turn queue per session, parallel across sessions.
+- Security: rejects non-localhost/file Origins (drive-by websites can't puppet the agents);
+  `/swarm/send` requires the internal token. **Sessions run with
+  `--dangerously-skip-permissions`** — the UI can't answer permission prompts, so agents
+  act autonomously. Only summon agents on work you'd let Claude do unattended.
+- Frontend: each `.ws-win` opens an `EventSource`; events render as styled lines
+  (user `›`, assistant, tool `▸`, swarm `⇄`, errors). Port override for tests: `?agents=<port>`.
+- Tests: `tests/agent-terminals.spec.js` runs against a `MOCK_CLAUDE=1` instance on :57312
+  (started automatically by Playwright's webServer) — deterministic, no API spend.

@@ -1,0 +1,76 @@
+{
+  "id": "slide_sw",
+  "label": "Slide switch SPDT",
+  "prefix": "SW",
+  "value": "Slide switch SPDT",
+  "body": [
+    7.8,
+    3.4
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": -1.5,
+      "y": 0.8,
+      "w": 0.7,
+      "h": 1.4,
+      "shape": "rect",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "2",
+      "x": 0,
+      "y": 0.8,
+      "w": 0.7,
+      "h": 1.4,
+      "shape": "rect",
+      "fn": "2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "3",
+      "x": 1.5,
+      "y": 0.8,
+      "w": 0.7,
+      "h": 1.4,
+      "shape": "rect",
+      "fn": "3",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "M1",
+      "x": -3.2,
+      "y": -0.6,
+      "w": 1,
+      "h": 1.2,
+      "shape": "rect",
+      "fn": "M1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "M2",
+      "x": 3.2,
+      "y": -0.6,
+      "w": 1,
+      "h": 1.2,
+      "shape": "rect",
+      "fn": "M2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "Tiny side-slide power switch (approximate footprint, check datasheet).",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

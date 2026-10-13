@@ -1,0 +1,40 @@
+{
+  "id": "r_0402",
+  "label": "Resistor 0402",
+  "prefix": "R",
+  "value": "Resistor 0402",
+  "body": [
+    2,
+    1
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": -0.5,
+      "y": 0,
+      "w": 0.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "2",
+      "x": 0.5,
+      "y": 0,
+      "w": 0.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "Resistor, 0402 size (1.0 x 0.5 mm).",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

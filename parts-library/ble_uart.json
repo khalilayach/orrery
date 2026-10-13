@@ -1,0 +1,54 @@
+{
+  "id": "ble_uart",
+  "label": "BLE module (UART)",
+  "prefix": "U",
+  "value": "BLE module (UART)",
+  "body": [
+    9,
+    7
+  ],
+  "pads": [
+    {
+      "n": "3V3",
+      "x": -4.5,
+      "y": -1.9,
+      "w": 1.6,
+      "h": 0.8,
+      "shape": "rect",
+      "fn": "3V3",
+      "thru": false
+    },
+    {
+      "n": "GND",
+      "x": -4.5,
+      "y": -0.6,
+      "w": 1.6,
+      "h": 0.8,
+      "shape": "rect",
+      "fn": "GND",
+      "thru": false
+    },
+    {
+      "n": "TXD",
+      "x": -4.5,
+      "y": 0.6,
+      "w": 1.6,
+      "h": 0.8,
+      "shape": "rect",
+      "fn": "TXD",
+      "thru": false
+    },
+    {
+      "n": "RXD",
+      "x": -4.5,
+      "y": 1.9,
+      "w": 1.6,
+      "h": 0.8,
+      "shape": "rect",
+      "fn": "RXD",
+      "thru": false
+    }
+  ],
+  "source": "created in TRACE",
+  "custom": true
+}

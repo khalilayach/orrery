@@ -1,0 +1,40 @@
+{
+  "id": "c_0402",
+  "label": "Capacitor 0402",
+  "prefix": "C",
+  "value": "Capacitor 0402",
+  "body": [
+    2,
+    1
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": -0.5,
+      "y": 0,
+      "w": 0.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "2",
+      "x": 0.5,
+      "y": 0,
+      "w": 0.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "Ceramic capacitor, 0402 size.",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

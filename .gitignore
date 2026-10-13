@@ -6,3 +6,10 @@ playwright-report/
 .gstack/terminal-*
 .gstack/claude-available.json
 .gstack/browse-*
+
+# TRACE online-search cache (the saved parts themselves in parts-library/*.json are kept)
+parts-library/.cache/
+
+# local QA run output
+.gstack/qa-reports/screenshots/
+.gstack/qa-reports/baseline.json

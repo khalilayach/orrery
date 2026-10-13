@@ -1,0 +1,112 @@
+{
+  "id": "mic_msm261",
+  "label": "MSM261S4030H0R mic",
+  "prefix": "MK",
+  "value": "MSM261S4030H0R mic",
+  "body": [
+    3.4,
+    3.65
+  ],
+  "pads": [
+    {
+      "n": "GND",
+      "x": -1.1,
+      "y": -1.35,
+      "w": 0.8,
+      "h": 0.55,
+      "shape": "rect",
+      "fn": "GND",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "NC",
+      "x": -1.1,
+      "y": -0.45,
+      "w": 0.8,
+      "h": 0.55,
+      "shape": "rect",
+      "fn": "NC",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "WS",
+      "x": -1.1,
+      "y": 0.45,
+      "w": 0.8,
+      "h": 0.55,
+      "shape": "rect",
+      "fn": "WS",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "CHIPEN",
+      "x": -1.1,
+      "y": 1.35,
+      "w": 0.8,
+      "h": 0.55,
+      "shape": "rect",
+      "fn": "CHIPEN",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "LR",
+      "x": 1.1,
+      "y": 1.35,
+      "w": 0.8,
+      "h": 0.55,
+      "shape": "rect",
+      "fn": "LR",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "SCK",
+      "x": 1.1,
+      "y": 0.45,
+      "w": 0.8,
+      "h": 0.55,
+      "shape": "rect",
+      "fn": "SCK",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "SD",
+      "x": 1.1,
+      "y": -0.45,
+      "w": 0.8,
+      "h": 0.55,
+      "shape": "rect",
+      "fn": "SD",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "VDD",
+      "x": 1.1,
+      "y": -1.35,
+      "w": 0.8,
+      "h": 0.55,
+      "shape": "rect",
+      "fn": "VDD",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "Tiny digital (I2S) MEMS microphone, 4x3 mm, sound port on top. Picks up your voice for the push-to-talk button.",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

@@ -19,9 +19,10 @@ import { createServer } from "node:http";
 import { spawn, execSync } from "node:child_process";
 import { randomUUID, randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync, statSync } from "node:fs";
-import { resolve, dirname, isAbsolute } from "node:path";
+import { resolve, dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
+import { createPartsStore } from "./parts-store.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const GSTACK = resolve(ROOT, ".gstack");
@@ -29,6 +30,12 @@ const PORT = Number(process.env.PORT || 57253);
 const MOCK = process.env.MOCK_CLAUDE === "1";
 const TURN_TIMEOUT_MS = Number(process.env.AGENT_TURN_TIMEOUT_MS || 10 * 60 * 1000);
 const TOKEN = randomBytes(30).toString("base64url");
+// TRACE parts library: one JSON file per part on disk, so parts are always there.
+// Mock runs (tests) use a throwaway folder and a fixture "online" library.
+const partsStore = createPartsStore({
+  dir: process.env.PARTS_DIR || (MOCK ? join(tmpdir(), "orrery-parts-mock") : resolve(ROOT, "parts-library")),
+  mock: MOCK,
+});
 
 function findClaude() {
   if (process.env.CLAUDE_BIN && existsSync(process.env.CLAUDE_BIN)) return process.env.CLAUDE_BIN;
@@ -73,10 +80,11 @@ function dropLinksFor(sessionId) {
 }
 
 class Session {
-  constructor(name, cwd) {
+  constructor(name, cwd, kind = "agent") {
     this.id = randomUUID();
     this.name = name;
     this.cwd = cwd;
+    this.kind = kind;             // "agent" (swarm terminal) | "trace" (circuit-board studio dock) | "lumen" (image studio dock)
     this.claudeId = randomUUID(); // fixed conversation id: --session-id first, --resume after
     this.started = false;         // has the first claude turn run yet
     this.listeners = new Set();   // SSE responses
@@ -127,6 +135,62 @@ function swarmSystemPrompt(s) {
   return out.join("\n");
 }
 
+// ---------- TRACE (circuit-board studio) bridge ----------
+// The browser holds the board. Claude edits it by running server/trace-cli.mjs,
+// which POSTs /trace/cmd here; we forward the command to the open TRACE page over
+// SSE and hold the HTTP call until the page answers on /trace/result.
+const traceClients = new Set();
+/** @type {Map<string, {ok:(v:any)=>void, timer:NodeJS.Timeout}>} */
+const tracePending = new Map();
+const TRACE_CLI = resolve(ROOT, "server", "trace-cli.mjs");
+
+function traceSystemPrompt() {
+  return "You are Claude inside TRACE, a circuit-board design studio. The user watches the schematic graph and the PCB live in their browser. You work through one CLI:\n  node \"{CLI}\" <command> key=value ...      (run `help` once to see every command)\n\nHOW YOU WORK — always in this order, and tell the user in plain English what you are doing (short, no jargon dumps):\n1. ARCHITECTURE (talk first, touch nothing). Restate the goal. List your ASSUMPTIONS (supply voltage, current budget, board size, interfaces, part families). Split the design into blocks. Do the CALCULATIONS before any part exists: current budget, LED/pull-up resistor values ((V-Vf)/I, rounded to E24), regulator headroom and dissipation, decoupling, trace current. Show the blocks as a diagram in a ```diagram fence, one edge per line, like `USB-C -> 3.3V LDO` (boxes appear automatically). If the user has a real decision to make, end the message with one line: `OPTIONS: first choice | second choice | third choice`.\n   In PLAN mode you stop here and wait — you are not allowed to edit the board. In AUTO mode continue straight on.\n2. RESEARCH. `find_parts q=\"...\"` returns real LCSC/JLCPCB parts with price, stock and links (no key needed). Choose parts whose ratings fit your calculations; prefer in-stock, JLCPCB-basic parts, all from one vendor (LCSC) so the user ships once. Say which part you chose and why.\n3. SCHEMATIC. Write the WHOLE design as one JSON file and send it ONCE: `build file=design.json`. Add dry=1 first if unsure. In the spec give every part a ref, type, value, a `block` (a short sheet name like \"USB-C Conn\", \"3V3 Regulator\" — it becomes a titled sheet in the user's Schematic) and a `note` (what it does in this circuit), and describe wiring as `nets` (net name -> list of pads). The user reads that schematic: power and ground show as symbols on the pins, signals as wires, so name nets meaningfully (VBUS, +3V3, GND, LED_SIG). Parts without x/y are placed automatically and can never overlap. Never place or delete parts one at a time to \"see what happens\", and never remove-then-re-add: to change anything, send a corrected full spec with replace:true. Look at `help` for the exact spec format.\n4. CHECK. `build` returns the circuit digest, the electrical problems and design-rule errors. Fix every DANGER and DRC error by correcting the spec (not by patching), then build again. Re-read with `circuit` ONCE at the end.\n5. LAYOUT and REVIEW — only when the schematic is clean: `add_part`/`source` real parts, then the PCB: wire classes (`rule_class name=Power width=0.5`, `rule_assign net=VBUS,+3V3 class=Power` — traces take their net's class width automatically), board shape (`set_outline radius=`, `add_cutout`; or pass `outline`, `cutouts`, `rules` inside the build spec), `autoplace` (edge connectors face outward, decoupling caps sit at their pins, parts keep a hand-solderable gap; `set_assembly mode=hand|reflow`), then `autoroute` (real 45° copper with class widths/clearances, vias only when needed, ground via a B.Cu pour; read `failed` and fix the cause, never leave airwires), `drc`, then `review` like an engineer (missing decoupling, regulator caps, pull-ups, USB ESD/skew, connectors off the edge, parts too close to solder, thin traces) and fix every danger/warning with its `fix` text, re-run until clean. When you pick MCU pins, choose ones on the side facing the connector they serve so wiring is short. For any trace the user asks about, `explain_trace id=` / `explain_net net=` gives the exact settings (class, width, clearance, via, layer, current, drop); tell the user those numbers. Then `circuit`, then a plain-English review: what every block does, the key numbers, remaining risks, what the user should double-check.\n\nREADING A CIRCUIT FAST: `circuit` is the graph in text: every part with its ratings and connected pins, every net with voltage and current, the power tree, problems and a TODO list. The notes after \"—\" say what each part is for. Trust it. Do NOT call `board` (large) unless you need exact pad coordinates, and never explore by trial and error.\n\nCART: the user buys everything in one order. `bom` is the cart. Prefer parts that are all on LCSC (find_parts returns LCSC ids) so it ships from one place; say so if you could not.\n\nTOOLS YOU MAY NEED: unplug pad=U1.GND (one pin off a net), rule_class / rule_assign / apply_rules, set_outline, add_cutout / set_cutout, connect / disconnect / auto_wire (graph wires), insert_series pad=D1.A value=330R (resistor in series), set_electrical (ratings), describe ref= text= (what a part does), source / bom (real part + cost), free_spot, drc, analyze, undo. Coordinates are mm, origin top-left, y grows down; pads are REF.PAD (U1.4 or U1.VDD). Rules: min trace 0.15 mm, gap 0.15 mm, edge clearance 0.30 mm. If the CLI says TRACE is not open, tell the user to open it.\n\nSTYLE: you are talking to someone designing a board, often learning. Use short sections (Assumptions, Calculations, Plan, Result), tables for comparisons, plain words. Never edit project files; the CLI is your only tool for the board.".replace("{CLI}", TRACE_CLI);
+}
+
+function traceCommand(cmd, args) {
+  return new Promise((ok) => {
+    if (!traceClients.size) return ok({ code: 503, body: { ok: false, error: "TRACE workspace is not open in the browser — ask the user to open the TRACE constellation in Orrery." } });
+    const id = randomUUID();
+    const timer = setTimeout(() => { tracePending.delete(id); ok({ code: 504, body: { ok: false, error: "TRACE did not answer in time" } }); }, 15000);
+    tracePending.set(id, { ok, timer });
+    const payload = `data: ${JSON.stringify({ type: "cmd", id, cmd, args })}\n\n`;
+    for (const res of traceClients) res.write(payload);
+  });
+}
+
+// ---------- LUMEN bridge (image / GIF / video studio) ----------
+// Same relay as TRACE: Claude runs server/lumen-cli.mjs, which POSTs /lumen/cmd; the open
+// LUMEN page receives it over SSE, runs it on the live document, and answers on /lumen/result.
+const lumenClients = new Set();
+/** @type {Map<string, {ok:(v:any)=>void, timer:NodeJS.Timeout}>} */
+const lumenPending = new Map();
+const LUMEN_CLI = resolve(ROOT, "server", "lumen-cli.mjs");
+
+function lumenSystemPrompt() {
+  return [
+    `You are Claude inside LUMEN, the image / GIF / video studio of the Orrery workspace. The user is looking at a live canvas in their browser and you edit that same canvas.`,
+    `You control it ONLY by running this command (any shell; quote values that contain spaces):`,
+    `  node "${LUMEN_CLI}" <command> key=value key=value ...`,
+    `Run \`node "${LUMEN_CLI}" help\` first to see every command, then \`state\` to read the canvas and its layers (top layer first).`,
+    `Units are pixels, origin top-left, y grows downward. Layers are addressed by id (l12) or exact name; with no id the selected layer is used. Text can contain emoji.`,
+    `Typical flow: state → add_text / add_shape / add_image → set (position, colour, opacity, blend) → adjust (brightness, contrast, blur…) → animate (fade-in, slide-up, pulse…) → state to verify. The user sees every change live, so narrate briefly. Everything is undoable by the user.`,
+    `Design well: keep margins, align things to the canvas (align to=center), use at most two fonts, keep text contrast readable, and size text relative to the canvas height.`,
+    `You cannot see pixels; rely on state (positions, sizes) and get_pixel for colours. Never edit project files to change the canvas — use the CLI. If the CLI says the LUMEN workspace is not open, tell the user to open the LUMEN constellation.`,
+  ].join("\n");
+}
+
+function lumenCommand(cmd, args) {
+  return new Promise((ok) => {
+    if (!lumenClients.size) return ok({ code: 503, body: { ok: false, error: "LUMEN workspace is not open in the browser — ask the user to open the LUMEN constellation in Orrery." } });
+    const id = randomUUID();
+    const timer = setTimeout(() => { lumenPending.delete(id); ok({ code: 504, body: { ok: false, error: "LUMEN did not answer in time" } }); }, 30000);
+    lumenPending.set(id, { ok, timer });
+    const payload = `data: ${JSON.stringify({ type: "cmd", id, cmd, args })}\n\n`;
+    for (const res of lumenClients) res.write(payload);
+  });
+}
+
 // ---------- claude turn runner ----------
 function doCd(s, raw) {
   const dest = resolveCd(s.cwd, raw);
@@ -155,7 +219,7 @@ function runTurn(s) {
 
   const args = ["-p", "--output-format", "stream-json", "--verbose",
     "--dangerously-skip-permissions",
-    "--append-system-prompt", swarmSystemPrompt(s),
+    "--append-system-prompt", s.kind === "trace" ? traceSystemPrompt() : s.kind === "lumen" ? lumenSystemPrompt() : swarmSystemPrompt(s),
     s.started ? "--resume" : "--session-id", s.claudeId];
   const child = spawn(CLAUDE_BIN, args, { cwd: s.cwd, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
   s.child = child;
@@ -299,17 +363,19 @@ const server = createServer(async (req, res) => {
       return json(res, 200, { ok: true, mock: MOCK, pid: process.pid, sessions: sessions.size, ...(MOCK ? { token: TOKEN } : {}) });
 
     if (req.method === "GET" && url.pathname === "/sessions")
-      return json(res, 200, [...sessions.values()].map(s => ({ id: s.id, name: s.name, cwd: s.cwd, busy: s.busy })));
+      return json(res, 200, [...sessions.values()].filter(s => s.kind === "agent") // trace docks aren't swarm agents
+        .map(s => ({ id: s.id, name: s.name, cwd: s.cwd, busy: s.busy })));
 
     if (req.method === "POST" && url.pathname === "/session") {
       const body = await readBody(req);
       const name = String(body.name || "Agent").replace(/\W/g, "").slice(0, 24) || "Agent";
       let cwd = body.cwd ? resolveCd(ROOT, String(body.cwd)) : ROOT;
       try { if (!statSync(cwd).isDirectory()) cwd = ROOT; } catch { cwd = ROOT; }
-      const s = new Session(name, cwd);
+      const kind = body.kind === "trace" ? "trace" : body.kind === "lumen" ? "lumen" : "agent";
+      const s = new Session(name, cwd, kind);
       sessions.set(s.id, s);
-      byName.set(name.toLowerCase(), s.id);
-      return json(res, 200, { id: s.id, name: s.name, cwd: s.cwd });
+      if (kind === "agent") byName.set(name.toLowerCase(), s.id); // trace docks are not swarm-addressable
+      return json(res, 200, { id: s.id, name: s.name, cwd: s.cwd, kind });
     }
 
     if (parts[0] === "session" && parts[1]) {
@@ -333,7 +399,7 @@ const server = createServer(async (req, res) => {
         for (const l of s.listeners) l.end();
         sessions.delete(s.id);
         dropLinksFor(s.id);
-        if (byName.get(s.name.toLowerCase()) === s.id) byName.delete(s.name.toLowerCase());
+        if (s.kind === "agent" && byName.get(s.name.toLowerCase()) === s.id) byName.delete(s.name.toLowerCase());
         return json(res, 200, { ok: true });
       }
     }
@@ -383,7 +449,7 @@ const server = createServer(async (req, res) => {
     }
     if (req.method === "GET" && url.pathname === "/swarm/agents") {
       if (url.searchParams.get("token") !== TOKEN) return json(res, 403, { error: "bad token" });
-      return json(res, 200, [...sessions.values()].map(s => s.name));
+      return json(res, 200, [...sessions.values()].filter(s => s.kind === "agent").map(s => s.name));
     }
     // read a linked agent's transcript (requires a read link from → target)
     if (req.method === "GET" && url.pathname === "/swarm/read") {
@@ -393,6 +459,77 @@ const server = createServer(async (req, res) => {
       if (!fromS || !target) return json(res, 404, { error: "unknown agent" });
       if (!canRead(fromS.id, target.id)) return json(res, 403, { error: `no read link to ${target.name} — the user has to draw one first` });
       return json(res, 200, { name: target.name, cwd: target.cwd, transcript: target.log.slice(-80) });
+    }
+
+    // ---- TRACE parts library: files on disk + online footprint search ----
+    if (req.method === "GET" && url.pathname === "/parts") return json(res, 200, partsStore.list());
+    if (req.method === "POST" && url.pathname === "/parts") {
+      try { return json(res, 200, { ok: true, file: partsStore.save(await readBody(req)) }); }
+      catch (e) { return json(res, e.code || 400, { error: String(e.message || e) }); }
+    }
+    if (req.method === "DELETE" && parts[0] === "parts" && parts[1]) {
+      try { partsStore.remove(parts[1]); return json(res, 200, { ok: true }); }
+      catch (e) { return json(res, e.code || 400, { error: String(e.message || e) }); }
+    }
+    if (req.method === "GET" && url.pathname === "/parts/search") {
+      try { return json(res, 200, await partsStore.search(url.searchParams.get("q"))); }
+      catch (e) { return json(res, 502, { error: String(e.message || e) }); }
+    }
+    if (req.method === "GET" && url.pathname === "/parts/import") {
+      try { return json(res, 200, await partsStore.importFootprint(String(url.searchParams.get("path") || ""))); }
+      catch (e) { return json(res, 502, { error: String(e.message || e) }); }
+    }
+
+    // ---- TRACE bridge: browser subscribes, Claude's CLI sends commands ----
+    if (req.method === "GET" && url.pathname === "/trace/events") {
+      res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" });
+      res.write(`data: ${JSON.stringify({ type: "hello" })}\n\n`);
+      traceClients.add(res);
+      req.on("close", () => traceClients.delete(res));
+      return;
+    }
+    if (req.method === "GET" && url.pathname === "/trace/status")
+      return json(res, 200, { open: traceClients.size > 0 });
+    if (req.method === "POST" && url.pathname === "/trace/result") {
+      const body = await readBody(req);
+      const p = tracePending.get(body.id);
+      if (!p) return json(res, 404, { error: "no pending command" });
+      clearTimeout(p.timer);
+      tracePending.delete(body.id);
+      p.ok(body.ok ? { code: 200, body: { ok: true, result: body.result } } : { code: 422, body: { ok: false, error: String(body.error || "failed") } });
+      return json(res, 200, { ok: true });
+    }
+    if (req.method === "POST" && url.pathname === "/trace/cmd") {
+      const body = await readBody(req);
+      if (body.token !== TOKEN) return json(res, 403, { error: "bad token" });
+      const out = await traceCommand(String(body.cmd || ""), body.args ?? []);
+      return json(res, out.code, out.body);
+    }
+
+    // ---- LUMEN bridge ----
+    if (req.method === "GET" && url.pathname === "/lumen/events") {
+      res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" });
+      res.write(`data: ${JSON.stringify({ type: "hello" })}\n\n`);
+      lumenClients.add(res);
+      req.on("close", () => lumenClients.delete(res));
+      return;
+    }
+    if (req.method === "GET" && url.pathname === "/lumen/status")
+      return json(res, 200, { open: lumenClients.size > 0 });
+    if (req.method === "POST" && url.pathname === "/lumen/result") {
+      const body = await readBody(req);
+      const p = lumenPending.get(body.id);
+      if (!p) return json(res, 404, { error: "no pending command" });
+      clearTimeout(p.timer);
+      lumenPending.delete(body.id);
+      p.ok(body.ok ? { code: 200, body: { ok: true, result: body.result } } : { code: 422, body: { ok: false, error: String(body.error || "failed") } });
+      return json(res, 200, { ok: true });
+    }
+    if (req.method === "POST" && url.pathname === "/lumen/cmd") {
+      const body = await readBody(req);
+      if (body.token !== TOKEN) return json(res, 403, { error: "bad token" });
+      const out = await lumenCommand(String(body.cmd || ""), body.args ?? {});
+      return json(res, out.code, out.body);
     }
 
     json(res, 404, { error: "not found" });

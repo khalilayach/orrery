@@ -1,0 +1,40 @@
+{
+  "id": "found-c963381",
+  "label": "1N5819W",
+  "prefix": "D",
+  "value": "1N5819W",
+  "body": [
+    4,
+    1.6
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": -1.5,
+      "y": 0,
+      "w": 1,
+      "h": 1.2,
+      "shape": "rect",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "2",
+      "x": 1.5,
+      "y": 0,
+      "w": 1,
+      "h": 1.2,
+      "shape": "rect",
+      "fn": "2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "1N5819W (SOD-123) — 13A 350mA 40V 5uA@30V 600mV@200mA Independent SOD-123 Schottky Diodes ROHS",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

@@ -1,0 +1,40 @@
+{
+  "id": "xtal_3215",
+  "label": "Crystal 32.768kHz 3215",
+  "prefix": "Y",
+  "value": "Crystal 32.768kHz 3215",
+  "body": [
+    4.4,
+    2.2
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": -1.4,
+      "y": 0,
+      "w": 1.2,
+      "h": 1.8,
+      "shape": "rect",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "2",
+      "x": 1.4,
+      "y": 0,
+      "w": 1.2,
+      "h": 1.8,
+      "shape": "rect",
+      "fn": "2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "32.768 kHz watch crystal, 3.2 x 1.5 mm. Keeps accurate time while the chip sleeps.",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

@@ -1,0 +1,64 @@
+{
+  "id": "jst_sh_2",
+  "label": "JST SH 2-pin battery",
+  "prefix": "J",
+  "value": "JST SH 2-pin battery",
+  "body": [
+    5.2,
+    8
+  ],
+  "pads": [
+    {
+      "n": "BATP",
+      "x": -0.5,
+      "y": 0,
+      "w": 0.6,
+      "h": 1.55,
+      "shape": "rect",
+      "fn": "BATP",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "BATN",
+      "x": 0.5,
+      "y": 0,
+      "w": 0.6,
+      "h": 1.55,
+      "shape": "rect",
+      "fn": "BATN",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "S1",
+      "x": -1.8,
+      "y": 2.9,
+      "w": 1.2,
+      "h": 1.8,
+      "shape": "rect",
+      "fn": "S1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "S2",
+      "x": 1.8,
+      "y": 2.9,
+      "w": 1.2,
+      "h": 1.8,
+      "shape": "rect",
+      "fn": "S2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "Tiny 2-pin 1.0mm JST-SH socket for the LiPo battery (pin 1 = battery +, pin 2 = battery -).",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

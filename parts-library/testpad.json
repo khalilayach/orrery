@@ -1,0 +1,28 @@
+{
+  "id": "testpad",
+  "label": "Test pad",
+  "prefix": "TP",
+  "value": "Test pad",
+  "body": [
+    1.4,
+    1.4
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": 0,
+      "y": 0,
+      "w": 1,
+      "h": 1,
+      "shape": "circle",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "Small bare copper pad you can solder a wire or probe to.",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

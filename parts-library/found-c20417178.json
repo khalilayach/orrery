@@ -1,0 +1,64 @@
+{
+  "id": "found-c20417178",
+  "label": "PJM05P40SA",
+  "prefix": "Q",
+  "value": "PJM05P40SA",
+  "body": [
+    3.7,
+    2.54
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": -2.7,
+      "y": -0.635,
+      "w": 1.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "2",
+      "x": -2.7,
+      "y": 0.635,
+      "w": 1.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "4",
+      "x": 2.7,
+      "y": -0.635,
+      "w": 1.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "4",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "3",
+      "x": 2.7,
+      "y": 0.635,
+      "w": 1.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "3",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "PJM05P40SA (SOT-23) — -55℃~+150℃ 1 P-Channel 1.2W 10nC@10V 117mΩ@4.5V 2.5V 40V 515pF 5A SOT-23 MOSFETs",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

@@ -1,0 +1,64 @@
+{
+  "id": "btn_side",
+  "label": "Side-mount tact switch",
+  "prefix": "SW",
+  "value": "Side-mount tact switch",
+  "body": [
+    5.3,
+    3.1
+  ],
+  "pads": [
+    {
+      "n": "A1",
+      "x": -2,
+      "y": -0.9,
+      "w": 0.9,
+      "h": 0.9,
+      "shape": "rect",
+      "fn": "A1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "A2",
+      "x": -2,
+      "y": 0.9,
+      "w": 0.9,
+      "h": 0.9,
+      "shape": "rect",
+      "fn": "A2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "B1",
+      "x": 2,
+      "y": -0.9,
+      "w": 0.9,
+      "h": 0.9,
+      "shape": "rect",
+      "fn": "B1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "B2",
+      "x": 2,
+      "y": 0.9,
+      "w": 0.9,
+      "h": 0.9,
+      "shape": "rect",
+      "fn": "B2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "Tiny push button mounted on the board edge so you press it from the side. Approximate footprint - check the datasheet.",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

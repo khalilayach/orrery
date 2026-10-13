@@ -1,0 +1,10 @@
+so you know Orch1 the constalation i want to make a new system the idea is this i want to create a new system for
+  Orch1 the idea is that i can now create new convos and swap between convos convos will try to remember only there
+  convo convos can hold agents inside them and covos you can create covos swap between convos covos cannot interact
+  with one another unless ordered to the idea is that covos will only remember there covos example if i create a convo
+  with 5 agents they work on project A and i have 3 agents working on convo B and they are working on project B then
+  these 2 covos cannnot interact with one another also i want users to be able to use claude code commands they should
+  run on claude code aswell also if i exit the site and re enter i want it to remember covos unless told to delete
+  convos there should be ui for swapping covos ui for checking what the agents are doing at the moment and all that
+  also the ais should be able to interact with this project each agent being a claude agent you can set there modles
+  and all that

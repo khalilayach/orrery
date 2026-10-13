@@ -1,0 +1,606 @@
+{
+ "replace": true,
+ "board": {
+  "w": 46,
+  "h": 76
+ },
+ "parts": [
+  {
+   "ref": "U1",
+   "type": "esp32s3_mini1",
+   "value": "ESP32-S3-MINI-1-N8",
+   "block": "MCU",
+   "note": "Brain: runs the toad animation, reads buttons/sensor/mic, talks BLE to the PC",
+   "x": 30,
+   "y": 13
+  },
+  {
+   "ref": "C1",
+   "type": "c_0603",
+   "value": "10uF",
+   "block": "MCU",
+   "note": "Bulk decoupling for the module 3V3",
+   "x": 24,
+   "y": 27
+  },
+  {
+   "ref": "C2",
+   "type": "c_0402",
+   "value": "100nF",
+   "block": "MCU",
+   "note": "High-frequency decoupling at the module 3V3 pin",
+   "x": 29,
+   "y": 27
+  },
+  {
+   "ref": "R1",
+   "type": "r_0402",
+   "value": "10k",
+   "block": "MCU",
+   "note": "EN pull-up: keeps the chip running",
+   "x": 34,
+   "y": 27
+  },
+  {
+   "ref": "C3",
+   "type": "c_0603",
+   "value": "1uF",
+   "block": "MCU",
+   "note": "EN delay cap: clean power-up reset (10 ms)",
+   "x": 39,
+   "y": 27
+  },
+  {
+   "ref": "SW_RST",
+   "type": "btn_side",
+   "value": "RESET",
+   "block": "MCU",
+   "note": "RESET button: pulls EN to ground",
+   "x": 43.5,
+   "y": 33,
+   "rot": 90
+  },
+  {
+   "ref": "SW_BOOT",
+   "type": "btn_side",
+   "value": "BOOT",
+   "block": "MCU",
+   "note": "BOOT button: hold at reset to enter flashing mode (GPIO0)",
+   "x": 43.5,
+   "y": 39,
+   "rot": 90
+  },
+  {
+   "ref": "J1",
+   "type": "usbc_16",
+   "value": "USB-C",
+   "block": "USB-C Conn",
+   "note": "USB-C: 5 V charging and USB data for flashing",
+   "x": 23,
+   "y": 69,
+   "rot": 180
+  },
+  {
+   "ref": "R2",
+   "type": "r_0402",
+   "value": "5.1k",
+   "block": "USB-C Conn",
+   "note": "CC1 pull-down: tells the charger we are a 5 V device",
+   "x": 15,
+   "y": 69
+  },
+  {
+   "ref": "R3",
+   "type": "r_0402",
+   "value": "5.1k",
+   "block": "USB-C Conn",
+   "note": "CC2 pull-down (cable can be plugged either way up)",
+   "x": 15,
+   "y": 72
+  },
+  {
+   "ref": "U2",
+   "type": "found-c5381776",
+   "value": "TP4054",
+   "block": "Charger",
+   "note": "Li-ion charger: charges the battery from USB, about 213 mA",
+   "x": 29,
+   "y": 41
+  },
+  {
+   "ref": "R4",
+   "type": "r_0402",
+   "value": "4.7k",
+   "block": "Charger",
+   "note": "PROG resistor: sets charge current = 1000/4.7k = 213 mA",
+   "x": 35,
+   "y": 41
+  },
+  {
+   "ref": "R5",
+   "type": "r_0402",
+   "value": "1k",
+   "block": "Charger",
+   "note": "Limits charge LED current to about 3 mA",
+   "x": 35,
+   "y": 45
+  },
+  {
+   "ref": "D1",
+   "type": "led_0603",
+   "value": "ORANGE",
+   "block": "Charger",
+   "note": "Charging indicator: lights while the battery charges",
+   "x": 30,
+   "y": 46
+  },
+  {
+   "ref": "C4",
+   "type": "c_0603",
+   "value": "4.7uF",
+   "block": "Charger",
+   "note": "Charger input (VBUS) decoupling",
+   "x": 22,
+   "y": 41
+  },
+  {
+   "ref": "C5",
+   "type": "c_0603",
+   "value": "4.7uF",
+   "block": "Charger",
+   "note": "Charger output (battery) decoupling",
+   "x": 24,
+   "y": 46
+  },
+  {
+   "ref": "J2",
+   "type": "jst_sh_2",
+   "value": "LiPo",
+   "block": "Battery",
+   "note": "Battery socket (pin 1 = +). Check the polarity of your battery!",
+   "x": 36,
+   "y": 64
+  },
+  {
+   "ref": "R6",
+   "type": "r_0402",
+   "value": "470k",
+   "block": "Battery",
+   "note": "Battery sense divider, top",
+   "x": 35,
+   "y": 50
+  },
+  {
+   "ref": "R7",
+   "type": "r_0402",
+   "value": "470k",
+   "block": "Battery",
+   "note": "Battery sense divider, bottom: halves battery voltage for the ADC",
+   "x": 35,
+   "y": 53
+  },
+  {
+   "ref": "C6",
+   "type": "c_0402",
+   "value": "100nF",
+   "block": "Battery",
+   "note": "Filters the battery-sense voltage",
+   "x": 30,
+   "y": 53
+  },
+  {
+   "ref": "U3",
+   "type": "sot23_5",
+   "value": "AP2112K-3.3",
+   "block": "3V3 Regulator",
+   "note": "Low-dropout regulator: battery 3.0-4.2 V to steady 3.3 V",
+   "elec": {
+    "kind": "regulator",
+    "vout": 3.3,
+    "vin_max": 6,
+    "dropout": 0.25,
+    "roles": {
+     "1": "power_in",
+     "2": "ground",
+     "3": "power_in",
+     "5": "power_out"
+    }
+   },
+   "x": 17,
+   "y": 34
+  },
+  {
+   "ref": "C7",
+   "type": "c_0603",
+   "value": "10uF",
+   "block": "3V3 Regulator",
+   "note": "LDO input capacitor",
+   "x": 12,
+   "y": 34
+  },
+  {
+   "ref": "C8",
+   "type": "c_0603",
+   "value": "10uF",
+   "block": "3V3 Regulator",
+   "note": "LDO output capacitor",
+   "x": 22,
+   "y": 34
+  },
+  {
+   "ref": "SW1",
+   "type": "btn_side",
+   "value": "POKE",
+   "block": "Buttons",
+   "note": "POKE: wake / interact (GPIO4, can wake from deep sleep)",
+   "x": 43.5,
+   "y": 45,
+   "rot": 90
+  },
+  {
+   "ref": "SW2",
+   "type": "btn_side",
+   "value": "TIME",
+   "block": "Buttons",
+   "note": "TIME: show the current time (GPIO5)",
+   "x": 43.5,
+   "y": 51,
+   "rot": 90
+  },
+  {
+   "ref": "SW3",
+   "type": "btn_side",
+   "value": "MIC",
+   "block": "Buttons",
+   "note": "MIC: push-to-talk, hold to record (GPIO6)",
+   "x": 43.5,
+   "y": 57,
+   "rot": 90
+  },
+  {
+   "ref": "U4",
+   "type": "lis2dh12",
+   "value": "LIS2DH12",
+   "block": "Motion Sensor",
+   "note": "Accelerometer: shake, tap, pick-up, face-down; INT1 wakes the chip",
+   "x": 14,
+   "y": 46
+  },
+  {
+   "ref": "C9",
+   "type": "c_0402",
+   "value": "100nF",
+   "block": "Motion Sensor",
+   "note": "VDD decoupling",
+   "x": 14,
+   "y": 42
+  },
+  {
+   "ref": "C10",
+   "type": "c_0402",
+   "value": "100nF",
+   "block": "Motion Sensor",
+   "note": "VDD_IO decoupling",
+   "x": 18,
+   "y": 46
+  },
+  {
+   "ref": "R8",
+   "type": "r_0402",
+   "value": "4.7k",
+   "block": "Motion Sensor",
+   "note": "I2C SDA pull-up",
+   "x": 10,
+   "y": 50
+  },
+  {
+   "ref": "R9",
+   "type": "r_0402",
+   "value": "4.7k",
+   "block": "Motion Sensor",
+   "note": "I2C SCL pull-up",
+   "x": 14,
+   "y": 50
+  },
+  {
+   "ref": "U5",
+   "type": "mic_msm261",
+   "value": "MSM261S4030H0R",
+   "block": "Microphone",
+   "note": "I2S digital MEMS microphone for push-to-talk",
+   "x": 5,
+   "y": 62
+  },
+  {
+   "ref": "C11",
+   "type": "c_0402",
+   "value": "100nF",
+   "block": "Microphone",
+   "note": "Mic power decoupling",
+   "x": 10,
+   "y": 62
+  },
+  {
+   "ref": "Y1",
+   "type": "xtal_3215",
+   "value": "32.768kHz",
+   "block": "32k Crystal",
+   "note": "Watch crystal: accurate time while the chip sleeps",
+   "x": 12,
+   "y": 56
+  },
+  {
+   "ref": "C12",
+   "type": "c_0402",
+   "value": "12pF",
+   "block": "32k Crystal",
+   "note": "Crystal load capacitor",
+   "x": 8,
+   "y": 56
+  },
+  {
+   "ref": "C13",
+   "type": "c_0402",
+   "value": "12pF",
+   "block": "32k Crystal",
+   "note": "Crystal load capacitor",
+   "x": 16,
+   "y": 56
+  },
+  {
+   "ref": "J3",
+   "type": "disp_hdr8",
+   "value": "1.69in ST7789",
+   "block": "Display",
+   "note": "1.69in 240x280 display module header (SPI)",
+   "x": 5,
+   "y": 20
+  }
+ ],
+ "nets": {
+  "GND": [
+   "J1.GND_A",
+   "J1.GND_B",
+   "J1.S1",
+   "J1.S2",
+   "J1.S3",
+   "J1.S4",
+   "J2.BATN",
+   "J2.S1",
+   "J2.S2",
+   "U2.2",
+   "R4.2",
+   "C4.2",
+   "C5.2",
+   "R7.2",
+   "C6.2",
+   "U3.2",
+   "C7.2",
+   "C8.2",
+   "C1.2",
+   "C2.2",
+   "C3.2",
+   "SW_RST.B1",
+   "SW_RST.B2",
+   "SW_BOOT.B1",
+   "SW_BOOT.B2",
+   "SW1.B1",
+   "SW1.B2",
+   "SW2.B1",
+   "SW2.B2",
+   "SW3.B1",
+   "SW3.B2",
+   "U4.GND6",
+   "U4.GND7",
+   "U4.GND8",
+   "U4.SDO",
+   "U4.RES",
+   "C9.2",
+   "C10.2",
+   "U5.GND",
+   "U5.LR",
+   "C11.2",
+   "C12.2",
+   "C13.2",
+   "J3.GND",
+   "R2.2",
+   "R3.2",
+   "U1.GND1",
+   "U1.GND2",
+   "U1.GND42",
+   "U1.GND43",
+   "U1.GND46",
+   "U1.GND47",
+   "U1.GND48",
+   "U1.GND49",
+   "U1.GND50",
+   "U1.GND51",
+   "U1.GND52",
+   "U1.GND53",
+   "U1.GND54",
+   "U1.GND55",
+   "U1.GND56",
+   "U1.GND57",
+   "U1.GND58",
+   "U1.GND59",
+   "U1.GND60",
+   "U1.GND61",
+   "U1.GND62",
+   "U1.GND63",
+   "U1.GND64",
+   "U1.GND65"
+  ],
+  "VBUS": [
+   "J1.VBUS_A",
+   "J1.VBUS_B",
+   "U2.4",
+   "C4.1",
+   "R5.1"
+  ],
+  "VBAT": [
+   "J2.BATP",
+   "U2.3",
+   "C5.1",
+   "R6.1",
+   "U3.1",
+   "U3.3",
+   "C7.1"
+  ],
+  "+3V3": [
+   "U3.5",
+   "C8.1",
+   "U1.3V3",
+   "C1.1",
+   "C2.1",
+   "R1.1",
+   "R8.1",
+   "R9.1",
+   "U4.VDD",
+   "U4.VDDIO",
+   "U4.CS",
+   "C9.1",
+   "C10.1",
+   "U5.VDD",
+   "U5.CHIPEN",
+   "C11.1",
+   "J3.3V3"
+  ],
+  "CC1": [
+   "J1.CC1",
+   "R2.1"
+  ],
+  "CC2": [
+   "J1.CC2",
+   "R3.1"
+  ],
+  "USB_DP": [
+   "J1.DP1",
+   "J1.DP2",
+   "U1.IO20"
+  ],
+  "USB_DM": [
+   "J1.DM1",
+   "J1.DM2",
+   "U1.IO19"
+  ],
+  "PROG": [
+   "U2.5",
+   "R4.1"
+  ],
+  "CHG_LED_A": [
+   "R5.2",
+   "D1.A"
+  ],
+  "CHG_N": [
+   "U2.1",
+   "D1.K"
+  ],
+  "VBAT_SENSE": [
+   "R6.2",
+   "R7.1",
+   "C6.1",
+   "U1.IO1"
+  ],
+  "EN": [
+   "U1.EN",
+   "R1.2",
+   "C3.1",
+   "SW_RST.A1",
+   "SW_RST.A2"
+  ],
+  "BOOT": [
+   "U1.IO0",
+   "SW_BOOT.A1",
+   "SW_BOOT.A2"
+  ],
+  "POKE": [
+   "U1.IO4",
+   "SW1.A1",
+   "SW1.A2"
+  ],
+  "TIME": [
+   "U1.IO5",
+   "SW2.A1",
+   "SW2.A2"
+  ],
+  "MIC_BTN": [
+   "U1.IO6",
+   "SW3.A1",
+   "SW3.A2"
+  ],
+  "IMU_INT1": [
+   "U1.IO7",
+   "U4.INT1"
+  ],
+  "I2C_SDA": [
+   "U1.IO8",
+   "U4.SDA",
+   "R8.2"
+  ],
+  "I2C_SCL": [
+   "U1.IO9",
+   "U4.SCL",
+   "R9.2"
+  ],
+  "I2S_BCLK": [
+   "U1.IO38",
+   "U5.SCK"
+  ],
+  "I2S_WS": [
+   "U1.IO39",
+   "U5.WS"
+  ],
+  "I2S_DATA": [
+   "U1.IO40",
+   "U5.SD"
+  ],
+  "XTAL_32K_P": [
+   "U1.IO15",
+   "Y1.1",
+   "C12.1"
+  ],
+  "XTAL_32K_N": [
+   "U1.IO16",
+   "Y1.2",
+   "C13.1"
+  ],
+  "LCD_CS": [
+   "U1.IO10",
+   "J3.CS"
+  ],
+  "LCD_MOSI": [
+   "U1.IO11",
+   "J3.MOSI"
+  ],
+  "LCD_SCK": [
+   "U1.IO12",
+   "J3.SCK"
+  ],
+  "LCD_DC": [
+   "U1.IO13",
+   "J3.DC"
+  ],
+  "LCD_RST": [
+   "U1.IO14",
+   "J3.RST"
+  ],
+  "LCD_BL": [
+   "U1.IO2",
+   "J3.BL"
+  ]
+ },
+ "rules": {
+  "classes": [
+   {
+    "name": "Power",
+    "width": 0.5,
+    "clearance": 0.2
+   }
+  ],
+  "assign": {
+   "VBUS": "Power",
+   "VBAT": "Power",
+   "+3V3": "Power"
+  }
+ }
+}

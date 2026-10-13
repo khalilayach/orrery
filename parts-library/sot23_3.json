@@ -1,0 +1,52 @@
+{
+  "id": "sot23_3",
+  "label": "SOT-23 (3-pin)",
+  "prefix": "Q",
+  "value": "SOT-23 (3-pin)",
+  "body": [
+    2.9,
+    3.4
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": -0.95,
+      "y": 1,
+      "w": 0.6,
+      "h": 1,
+      "shape": "rect",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "2",
+      "x": 0.95,
+      "y": 1,
+      "w": 0.6,
+      "h": 1,
+      "shape": "rect",
+      "fn": "2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "3",
+      "x": 0,
+      "y": -1,
+      "w": 0.6,
+      "h": 1,
+      "shape": "rect",
+      "fn": "3",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "3-pin transistor package. Pins 1,2 on the bottom, pin 3 on top.",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

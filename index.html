@@ -19,7 +19,7 @@
   #scene{position:fixed;inset:0}
   canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
   #void{z-index:0}
-  #overlay{z-index:1;touch-action:none;cursor:grab}
+  #overlay{z-index:1;touch-action:none;cursor:default}
   #overlay.drag{cursor:grabbing}
 
   /* temple foreground = the frontground photo, its center masked out so the void shows */
@@ -39,6 +39,11 @@
     mask-image:radial-gradient(ellipse 60% 62% at 50% 47%, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 32%, rgba(0,0,0,1) 62%), linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 56%, rgba(0,0,0,0) 90%);
     mask-composite:intersect}
   #frame .vig{position:absolute;inset:0;box-shadow:inset 0 0 200px 80px rgba(0,0,0,1)}
+  /* night shore (shore.js) is the default foreground: a pixel canvas on the bottom 55%, no mask/fisheye, no scrolling.
+     ?frame=photo brings back the temple image. */
+  #frame #shore{position:absolute;top:auto;left:0;bottom:0;width:100%;height:55%;display:block;image-rendering:pixelated}
+  #frame[data-look="photo"] #shore{display:none}
+  #frame:not([data-look="photo"]) .photo,#frame:not([data-look="photo"]) .vig{display:none}
 
   #wash{position:fixed;inset:0;z-index:5;pointer-events:none;
     background:radial-gradient(circle at var(--wx,50%) var(--wy,50%), var(--acc,#38E0FF) 0%, transparent 60%);
@@ -161,6 +166,8 @@
   @media (prefers-reduced-motion:reduce){#frame,#ui,#detail,#detail .panel{transition:none}}
   :focus-visible{outline:2px solid #8A8F98;outline-offset:2px}
 </style>
+<link rel="stylesheet" href="trace/trace.css">
+<link rel="stylesheet" href="lumen/lumen.css">
 </head>
 <body>
 <!-- weak fisheye/barrel warp for the temple photo, radiating from the center.
@@ -175,10 +182,10 @@
 <div id="scene">
   <canvas id="void"></canvas>
   <canvas id="overlay"></canvas>
-  <div id="frame"><div class="photo"></div><div class="vig"></div></div>
+  <div id="frame"><div class="photo"></div><canvas id="shore"></canvas><div class="vig"></div></div>
   <div id="crt"></div>
   <div id="wash"></div>
-  <div id="ui"><button id="recenter">↺ recenter</button></div>
+  <div id="ui"></div>
   <button id="skip">skip intro ▸</button>
 </div>
 
@@ -206,11 +213,36 @@
   <button id="wsclose">× close</button>
 </div>
 
+<!-- TRACE — circuit board studio constellation (engine + UI live in trace/) -->
+<div id="tr"></div>
+<!-- LUMEN — image / GIF / video studio constellation (engine + UI live in lumen/) -->
+<div id="lm"></div>
+<script src="shore.js"></script>
+<script src="trace/engine.js"></script>
+<script src="trace/electrical.js"></script>
+<script src="trace/design.js"></script>
+<script src="trace/rules.js"></script>
+<script src="trace/router.js"></script>
+<script src="trace/placer.js"></script>
+<script src="trace/review.js"></script>
+<script src="trace/finder.js"></script>
+<script src="trace/graph.js"></script>
+<script src="trace/finder-ui.js"></script>
+<script src="trace/chat.js"></script>
+<script src="trace/code.js"></script>
+<script src="trace/panel.js"></script>
+<script src="trace/cart.js"></script>
+<script src="trace/ui.js"></script>
+<script src="lumen/engine.js"></script>
+<script src="lumen/tools.js"></script>
+<script src="lumen/export.js"></script>
+<script src="lumen/ui.js"></script>
+
 <script>
 // ---------- data ----------
 const MANIFEST={ projects:[
   { id:"eve-ng", name:"EVE-NG Enterprise Fabric", accent:"#38E0FF", glyph:"#",
-    cx:0.30, cy:0.40, nest:[0.41,0.50],
+    cx:0.30, cy:0.26, nest:[0.41,0.50],
     nodes:[[0,0],[0.10,-0.05],[0.17,0.02],[0.08,0.08],[-0.02,0.06]],
     edges:[[0,1],[1,2],[2,3],[3,4],[4,0],[0,3]],
     tag:"Redundant enterprise lab · EVE-NG",
@@ -221,7 +253,7 @@ const MANIFEST={ projects:[
       ["What it proves","Built and broke it on purpose: link, switch, and gateway failover converge with no black-holing. Fabric stays up when pieces don't."],
     ] },
   { id:"orch1", name:"ORCH1", accent:"#1d1fe6", glyph:"@",
-    cx:0.70, cy:0.63, nest:[0.57,0.53],
+    cx:0.70, cy:0.40, nest:[0.57,0.53],
     nodes:[[0,0],[0.09,-0.06],[0.15,0.01],[0.07,0.07]],
     edges:[[0,1],[1,2],[2,3],[3,0],[0,2]],
     tag:"Self-healing orchestration · Python + Ansible",
@@ -231,7 +263,30 @@ const MANIFEST={ projects:[
       ["Self-healing loop","Detect drift or fault → diagnose → remediate automatically → verify → report. For known failure classes there is no human in the path."],
       ["Results","Turns manual break-fix into automated recovery; device config continuously converges back to declared intent."],
     ] },
+  { id:"lumen", name:"LUMEN", accent:"#ff8a4c", glyph:"◊",
+    cx:0.13, cy:0.40, nest:[0.53,0.62],
+    nodes:[[0,0],[0.06,-0.05],[0.13,-0.04],[0.17,0.02],[0.13,0.08],[0.06,0.08],[0.085,0.02]],
+    edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[6,0],[6,2],[6,4]],
+    tag:"Image, GIF & video studio · Claude-assisted",
+    sub:"A Photoshop-style editor in the browser — layers, text and emoji, filters, timeline animation, and a Claude that edits the canvas with you.",
+    secs:[
+      ["Studio","Layers, brushes, crop, background removal, blend modes and live adjustments on any size from phone to billboard."],
+      ["Output","Export PNG, JPG, WEBP, animated GIF, WebM video or a print-ready PDF."],
+    ] },
+  { id:"trace", name:"TRACE", accent:"#e3b04b", glyph:"Ω",
+    cx:0.38, cy:0.50, nest:[0.46,0.56],
+    nodes:[[0,0.05],[0.045,-0.015],[0.10,-0.055],[0.165,-0.03],[0.20,0.03],[0.115,0.04],[0.07,0.095]],
+    edges:[[0,1],[1,2],[2,3],[3,4],[2,5],[5,6],[1,5]],
+    tag:"Circuit board studio · Claude-assisted PCB design",
+    sub:"An interactive PCB editor with real measurements — and a Claude that can place, route and check the board with you.",
+    secs:[
+      ["Studio","Place parts, route 45° copper traces, drop vias, and measure anything. Live design-rule check on every edit."],
+      ["Claude","The dock talks to a real Claude Code session that drives the same board through a command API."],
+    ] },
 ]};
+// every constellation is drawn smaller so the whole map fits the sky without crowding (offsets are relative to node 0)
+const CONSTELLATION_SCALE=0.72;
+for(const p of MANIFEST.projects){const o=p.nodes[0];p.nodes=p.nodes.map(n=>[o[0]+(n[0]-o[0])*CONSTELLATION_SCALE,o[1]+(n[1]-o[1])*CONSTELLATION_SCALE]);}
 
 // ---------- WebGL gray ASCII void ----------
 const voidCv=document.getElementById("void");
@@ -254,7 +309,7 @@ function initGL(){
   const vs=`attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
   const fs=`precision highp float;
   uniform vec2 uRes;uniform float uTime;uniform vec2 uPan;uniform sampler2D uAtlas;uniform float uCount;uniform float uCell;
-  uniform float uZoom;uniform vec2 uFocus;
+  uniform float uZoom;uniform vec2 uFocus;uniform float uHorizon;uniform float uGlow;
   float hash(vec2 p){p=fract(p*vec2(443.897,441.423));p+=dot(p,p+vec2(19.19,17.71));return fract((p.x+p.y)*p.x);}
   float vn(vec2 p){vec2 i=floor(p),f=fract(p);float a=hash(i),b=hash(i+vec2(1,0)),c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));vec2 u=f*f*(3.-2.*f);return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}
   float fbm(vec2 p){float s=0.,a=.5;mat2 rot=mat2(0.8,0.6,-0.6,0.8);for(int i=0;i<4;i++){s+=a*vn(p);p=rot*p*2.03;a*=.5;}return s;}
@@ -267,17 +322,44 @@ function initGL(){
     float patches=fbm(cellC*0.03);
     float grain=(vn(cellC*0.9+uTime*0.55)-0.5)*0.13;
     float ditherN=(hash(gl_FragCoord.xy)-0.5)*0.05;
-    float L=clamp(patches*0.85+grain+ditherN,0.0,1.0);
+    vec2 v=gl_FragCoord.xy/uRes;
+    // night horizon: the atmosphere thickens toward the water in the void's own language - denser glyphs and a cool teal tint,
+    // so the sky melts into the shore instead of meeting it at a hard band (gl y-up; uHorizon = horizon height from the bottom)
+    // the horizon IS the void: above the waterline glyphs thicken and their colour walks grey -> indigo -> sea teal, reaching exactly the
+    // far-water colour at the waterline; just below it the same void keeps going as a faint reflection that the sea dithers into
+    float dh=v.y-uHorizon;
+    float hg=uGlow*(dh>=0.0?pow(1.0-clamp(dh/0.36,0.0,1.0),1.6):0.8*pow(1.0-clamp(-dh/0.09,0.0,1.0),2.2));
+    // the void leaks into the atmosphere: black tendrils hang from the top of the sky into the horizon glow, with dithered edges and a bead
+    // at each tip, breathing slowly. Measured in glyph cells so they stay in the void's pixel language.
+    float px=gl_FragCoord.x/uCell, depth=(uRes.y-gl_FragCoord.y)/uCell, drip=0.0;   // tendrils start in the black top of the sky and run down into the horizon glow
+    if(uGlow>0.0&&depth<0.9*uRes.y/uCell)for(int i=0;i<6;i++){
+      float fi=float(i), h1=hash(vec2(fi,3.1)), h2=hash(vec2(fi,7.7)), h3=hash(vec2(fi,11.3));
+      float xf=fi<3.0?0.03+0.22*h1:0.75+0.22*h1;   // only the sides, never the centre
+      float cxp=xf*uRes.x/uCell;
+      float len=(0.56+0.28*h2+0.03*sin(uTime*0.25+fi*2.1))*uRes.y/uCell;
+      float wid=0.9+1.5*h3, t=depth/len;
+      if(t<0.0||t>1.04)continue;
+      float w=wid*(1.5-0.95*t)+wid*1.35*smoothstep(0.80,0.93,t)*(1.0-smoothstep(0.95,1.04,t));
+      drip=max(drip,clamp((w-abs(px-cxp-sin(depth*0.11+fi)*0.5))/1.1,0.0,1.0));
+    }
+    float dripCut=step(hash(cellC+7.0),drip*0.65)*uGlow;   // never fully solid: it should read as the void thinning the glow, not as shapes       // dithered edge: partial coverage -> speckled, solid core -> black
+    hg*=1.0-dripCut;
+    // solid horizon band: foggy sparse noise above, then within ~7% of the screen above the water the glyph choice stops being random and
+    // settles on dense, connected glyphs (smooth patches only, no per-cell grain), so the far edge of the sky reads as one continuous line
+    float sol=(1.0-smoothstep(0.0,0.085,max(dh,0.0)))*step(-0.09,dh)*uGlow;
+    float Lfog=patches*0.85+grain+ditherN+hg*0.5;
+    float Lsol=0.72+0.25*patches+0.05*grain;
+    float L=clamp(mix(Lfog,Lsol,sol),0.0,1.0);
     float idx=floor(L*(uCount-0.001));
     vec2 auv=vec2((idx+local.x)/uCount, local.y);
     float cov=texture2D(uAtlas,auv).a;
-    float bright=0.04+0.15*patches;
+    float bright=0.03+0.12*patches+0.2*hg+0.2*sol*sol+0.03*sin(3.14159*clamp(hg,0.0,1.0))*uGlow;   // mid-sky band so the leaking void reads against it
     bright*=1.0+1.9*clamp((uZoom-1.0)/7.0,0.0,1.0); // dived: scaled-up dither stays visible behind the detail panel
-    vec3 col=vec3(0.40,0.43,0.50)*bright*cov;
+    vec3 tint=mix(mix(vec3(0.40,0.43,0.50),vec3(0.22,0.34,0.66),smoothstep(0.0,0.5,hg)),vec3(0.14,0.46,0.66),smoothstep(0.45,1.0,hg));
+    vec3 col=tint*bright*cov*(1.0-dripCut);
     // camera-space vignette: side edges, bottom 15%, top ~5% fall into darkness (gl y-up)
-    vec2 v=gl_FragCoord.xy/uRes;
     float vig=smoothstep(0.0,0.16,v.x)*smoothstep(0.0,0.16,1.0-v.x)
-             *smoothstep(0.0,0.15,v.y)
+             *smoothstep(0.0,0.06,v.y)
              *smoothstep(0.0,0.06,1.0-v.y);
     col*=0.12+0.88*vig;
     gl_FragColor=vec4(col,1.0);
@@ -288,8 +370,8 @@ function initGL(){
   const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
   const loc=gl.getAttribLocation(prog,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
-  ["uRes","uTime","uPan","uAtlas","uCount","uCell","uZoom","uFocus"].forEach(k=>uni[k]=gl.getUniformLocation(prog,k));
-  gl.uniform1f(uni.uCount,RAMP.length);gl.uniform1f(uni.uZoom,1);gl.uniform2f(uni.uFocus,0.5,0.5);
+  ["uRes","uTime","uPan","uAtlas","uCount","uCell","uZoom","uFocus","uHorizon","uGlow"].forEach(k=>uni[k]=gl.getUniformLocation(prog,k));
+  gl.uniform1f(uni.uCount,RAMP.length);gl.uniform1f(uni.uGlow,0);gl.uniform1f(uni.uHorizon,0.18);gl.uniform1f(uni.uZoom,1);gl.uniform2f(uni.uFocus,0.5,0.5);
   atlasTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,atlasTex);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,buildAtlas());
@@ -334,7 +416,8 @@ const STAR_COLORS=[
 function pickStarColor(u){for(const c of STAR_COLORS){if(u<=c[3])return c;}return STAR_COLORS[0];}
 function makeStars(){let r=20260702;const rnd=()=>{r=(r*9301+49297)%233280;return r/233280;};
   stars=[];const n=80;
-  for(let i=0;i<n;i++){const x=rnd(),y=rnd();const col=pickStarColor(rnd());
+  for(let i=0;i<n;i++){const x=rnd(),y=rnd()*0.64;const col=pickStarColor(rnd());   // stars live in the dark upper sky, above the horizon glow
+   
     stars.push({x,y,f:Math.floor(rnd()*STARFORMS.length),p:rnd()*6.28,b:rnd(),
       region:0.32+0.68*valueNoise2(x*3.5,y*3.5),col:[col[0],col[1],col[2]]});}}
 function resize(){dpr=Math.min(devicePixelRatio||1,2);const w=innerWidth,h=innerHeight;
@@ -343,19 +426,18 @@ function resize(){dpr=Math.min(devicePixelRatio||1,2);const w=innerWidth,h=inner
   if(glOk){gl.viewport(0,0,voidCv.width,voidCv.height);gl.uniform2f(uni.uRes,voidCv.width,voidCv.height);gl.uniform1f(uni.uCell,cell*dpr);}
   titleCells=null; // dither grid depends on W/H — rebuild lazily
   if(!stars.length)makeStars();
+  if(typeof Shore!=="undefined"&&Shore.ready)Shore.resize();
 }
 addEventListener("resize",resize);
 
-ov.addEventListener("pointerdown",e=>{if(dive||detailOpen||wsOpen)return;
-  drag={x:e.clientX,y:e.clientY,px:pan.x,py:pan.y};moved=0;ov.classList.add("drag");ov.setPointerCapture(e.pointerId);});
+ov.addEventListener("pointerdown",e=>{if(dive||detailOpen||wsOpen||trOpen||lmOpen)return;
+  /* no drag-to-pan: the map is fixed; a press is only a click on a constellation */moved=0;});
 ov.addEventListener("pointermove",e=>{const r=ov.getBoundingClientRect();hover={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};
-  if(drag){const dx=(e.clientX-drag.x),dy=(e.clientY-drag.y);moved+=Math.abs(dx)+Math.abs(dy);
-    pan.x=drag.px+dx/r.width;pan.y=drag.py+dy/r.height;panTarget={x:pan.x,y:pan.y};}});
+});
 ov.addEventListener("pointerup",e=>{ov.classList.remove("drag");
-  if(boot.done&&!dive&&!undive&&!detailOpen&&!wsOpen&&moved<6&&hover){const hit=hitTest(hover);if(hit)startDive(hit,e.clientX,e.clientY);}
+  if(boot.done&&!dive&&!undive&&!detailOpen&&!wsOpen&&!trOpen&&!lmOpen&&moved<6&&hover){const hit=hitTest(hover);if(hit)startDive(hit,e.clientX,e.clientY);}
   drag=null;});
 ov.addEventListener("pointerleave",()=>{hover=null;drag=null;ov.classList.remove("drag");});
-document.getElementById("recenter").onclick=()=>panTarget={x:0,y:0};
 document.getElementById("skip").onclick=()=>{boot.skip();};
 
 function worldScreen(p){return[((p.cx+pan.x)%1+1)%1*W, ((p.cy+pan.y)%1+1)%1*H];}
@@ -369,11 +451,11 @@ function vigK(sx,sy){const vx=sx/W,vy=sy/H;
   return 0.12+0.88*(smooth(0,0.16,vx)*smooth(0,0.16,1-vx)*smooth(0,0.15,1-vy)*smooth(0,0.06,vy));}
 function drawStars(alpha){
   const SU=cell*dpr*1.15;ctx.textAlign="center";ctx.textBaseline="middle";ctx.font=(cell*dpr*1.55)+"px "+MONO();
-  for(const s of stars){const tw=0.6+0.4*Math.sin(performance.now()/1000*1.1+s.p);
+  for(const s of stars){const tw=0.6+0.4*Math.sin(performance.now()/1000*1.1+s.p),sg=shoreGlow();
     const sx=((s.x+pan.x)%1+1)%1*W,sy=((s.y+pan.y)%1+1)%1*H;
     const c=s.col;
     ctx.shadowBlur=3.4*dpr*s.region;ctx.shadowColor=`rgba(${c[0]},${c[1]},${c[2]},.55)`;
-    ctx.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},${(0.13+0.33*tw)*alpha*s.region*vigK(sx,sy)})`;
+    ctx.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},${(0.13+0.33*tw)*alpha*s.region*vigK(sx,sy)*(1-0.9*smooth(0.55,0.82,sy/H)*sg)})`;
     for(const g of STARFORMS[s.f])ctx.fillText(g[2],sx+g[0]*SU,sy+g[1]*SU);}
   ctx.shadowBlur=0;
 }
@@ -403,6 +485,13 @@ function drawConstellation(p,sx,sy,spread,nodeK,alpha,interactive){
 
 // ---------- click → dive into constellation (real camera zoom) ----------
 const frameEl=document.getElementById("frame"),wash=document.getElementById("wash");
+let frameTy=0;   // how far (fraction of height) the foreground is currently translated down during the intro rise
+{ // foreground: night shore by default; ?frame=photo restores the temple image
+  const look=new URLSearchParams(location.search).get("frame")||"shore";
+  frameEl.dataset.look=look;
+  if(look!=="photo")Shore.init(document.getElementById("shore"));
+}
+const shoreGlow=()=>frameEl.dataset.look==="photo"?0:(parseFloat(frameEl.style.opacity)||0);
 function startDive(p,clientX,clientY){
   dive={t0:performance.now(),dur:900,p,cssx:clientX,cssy:clientY,opened:false};
   cam.fpx=clientX*dpr;cam.fpy=clientY*dpr;
@@ -503,7 +592,7 @@ function closeDetail(){detailOpen=false;document.getElementById("detail").classL
 document.getElementById("d-back").onclick=closeDetail;
 document.getElementById("detail").addEventListener("click",e=>{if(e.target.id==="detail")closeDetail();});
 addEventListener("keydown",e=>{if(e.key!=="Escape")return;
-  if(detailOpen)closeDetail();else if(wsOpen)closeWorkspace();});
+  if(detailOpen)closeDetail();else if(wsOpen)closeWorkspace();else if(trOpen)trEscape();else if(lmOpen&&!e.lmHandled)lmEscape();});
 
 // ---------- ORCH1 agent workspace — opaque blue halftone canvas over the black void ----------
 const ws=document.getElementById("ws"),wsCv=document.getElementById("wsvoid"),wsCtx=wsCv.getContext("2d");
@@ -802,14 +891,17 @@ document.getElementById("wsclose").onclick=closeWorkspace;
 document.getElementById("wsspawn").addEventListener("click",()=>wsAgent());
 
 // ---------- main loop ----------
+let lmSkip=0;
 function render(now){
+  // the studio covers the map, so redraw the void behind it ~7x per second instead of 60 — keeps the editor responsive on machines without a GPU
+  if(lmOpen&&++lmSkip%8){requestAnimationFrame(render);return;}
   const t=now/1000,it=(now-boot.t0)/1000;
   pan.x+=(panTarget.x-pan.x)*0.12;pan.y+=(panTarget.y-pan.y)*0.12;
 
   // dive camera
   if(dive){const dp=Math.min(1,(now-dive.t0)/dive.dur);cam.zoom=1+easeIn(dp)*7;
     if(dp>0.5&&!dive.opened){dive.opened=true;
-      if(dive.p.id==="orch1")openWorkspace();else openDetail(dive.p);}
+      if(dive.p.id==="orch1")openWorkspace();else if(dive.p.id==="trace")openTrace();else if(dive.p.id==="lumen")openLumen();else openDetail(dive.p);}
     wash.style.opacity=String(0.55*Math.sin(Math.min(1,dp)*Math.PI));
   }
   // undive camera — eased zoom back out after closing a constellation
@@ -820,7 +912,7 @@ function render(now){
   const camK=Math.max(0,(cam.zoom-1)/7); // 0 at rest, 1 fully dived
 
   // void — pans with the camera (world-stable) like the stars/constellations.
-  if(glOk){gl.useProgram(prog);gl.uniform1f(uni.uTime,t);gl.uniform2f(uni.uPan,-pan.x,pan.y);
+  if(glOk){gl.useProgram(prog);gl.uniform1f(uni.uTime,t);gl.uniform1f(uni.uGlow,shoreGlow());gl.uniform1f(uni.uHorizon,(1-Shore.HZ)-frameTy);gl.uniform2f(uni.uPan,-pan.x,pan.y);
     gl.uniform1f(uni.uZoom,cam.zoom);gl.uniform2f(uni.uFocus,cam.fx,cam.fy);gl.drawArrays(gl.TRIANGLES,0,3);}
 
   // ORCH1 workspace — its blue halftone void animates while open; link
@@ -848,14 +940,15 @@ function render(now){
   if(dive||undive){const ox=dive?dive.cssx:undive.cssx,oy=dive?dive.cssy:undive.cssy;
     frameEl.style.transformOrigin=ox+"px "+oy+"px";
     frameEl.style.transform=`scale(${(1+camK*3.4).toFixed(3)})`;
-    frameEl.style.opacity=String(Math.max(0,1-camK*1.3));
+    frameEl.style.opacity=String(Math.max(0,1-camK*1.3));frameTy=0;
   } else {
     const rO=1-Math.pow(1-fRise,3);                    // easeOut settle
     const ty=(1-rO)*innerHeight*0.30;                  // starts ~30vh low, rises to 0
     frameEl.style.transformOrigin="50% 50%";
     frameEl.style.transform=`translate3d(0,${ty.toFixed(1)}px,0)`;
-    frameEl.style.opacity=String(Math.min(1,fRise*1.5));
+    frameEl.style.opacity=String(Math.min(1,fRise*1.5));frameTy=ty/innerHeight;
   }
+  if(Shore.ready&&(parseFloat(frameEl.style.opacity)||0)>0.01)Shore.draw(t,reduce);
 
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);
   if(!glOk){ctx.fillStyle="#000208";ctx.fillRect(0,0,W,H);}
@@ -880,7 +973,7 @@ function render(now){
     if(drawConstellation(p,sx,sy,spread,nodeK,ca,interactive&&!dive))anyHover=true;
   }
   ctx.restore();
-  ov.style.cursor=drag?"grabbing":(anyHover&&!dive?"pointer":"grab");
+  ov.style.cursor=anyHover&&!dive?"pointer":"default";
 
   if(titleAlpha>0.01){const typed=boot.typed(it-T.type);const shown=(it<T.typeEnd)?"Orrery".slice(0,typed):"Orrery";
     const cur=it<T.typeEnd&&Math.floor(it*2.6)%2===0;
@@ -890,7 +983,7 @@ function render(now){
   if(boot.done){
     const tin=reduce?1:smooth(T.doneT,T.doneT+1.2,it);
     const ta=tin*Math.max(0,1-camK*1.2);
-    if(ta>0.01)drawPersistentTitle(t,ta);
+    // title removed
   }
 
   requestAnimationFrame(render);
@@ -898,7 +991,7 @@ function render(now){
 resize();
 requestAnimationFrame(render);
 addEventListener("load",()=>{const h=location.hash.slice(1);const p=MANIFEST.projects.find(x=>x.id===h);
-  if(p){boot.skip();setTimeout(()=>{if(p.id==="orch1")openWorkspace();else openDetail(p);},200);}});
+  if(p){boot.skip();setTimeout(()=>{if(p.id==="orch1")openWorkspace();else if(p.id==="trace")openTrace();else if(p.id==="lumen")openLumen();else openDetail(p);},200);}});
 </script>
 </body>
 </html>

@@ -1,0 +1,40 @@
+{
+  "id": "fuse_1812",
+  "label": "Polyfuse 1812",
+  "prefix": "F",
+  "value": "Polyfuse 1812",
+  "body": [
+    5.6,
+    3.8
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": -2,
+      "y": 0,
+      "w": 1.2,
+      "h": 3.4,
+      "shape": "rect",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "2",
+      "x": 2,
+      "y": 0,
+      "w": 1.2,
+      "h": 3.4,
+      "shape": "rect",
+      "fn": "2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "Resettable fuse (polyfuse): cuts current if something shorts, resets itself when cool.",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

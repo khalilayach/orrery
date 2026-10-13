@@ -1,0 +1,88 @@
+{
+  "id": "found-c5381776",
+  "label": "TP4054",
+  "prefix": "U",
+  "value": "TP4054",
+  "body": [
+    3.7,
+    3.81
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": -2.7,
+      "y": -1.27,
+      "w": 1.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "2",
+      "x": -2.7,
+      "y": 0,
+      "w": 1.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "3",
+      "x": -2.7,
+      "y": 1.27,
+      "w": 1.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "3",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "6",
+      "x": 2.7,
+      "y": -1.27,
+      "w": 1.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "6",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "5",
+      "x": 2.7,
+      "y": 0,
+      "w": 1.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "5",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "4",
+      "x": 2.7,
+      "y": 1.27,
+      "w": 1.6,
+      "h": 0.6,
+      "shape": "rect",
+      "fn": "4",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "TP4054 (SOT-23-5) — -65℃~+125℃ 1 20uA 4.2V 4.5V~5.5V 535mA Charging IC Lithium Battery SOT-23-5 Batt",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

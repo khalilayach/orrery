@@ -1,0 +1,112 @@
+{
+  "id": "found-c53670876",
+  "label": "MX4001D56",
+  "prefix": "U",
+  "value": "MX4001D56",
+  "body": [
+    2.25,
+    2.25
+  ],
+  "pads": [
+    {
+      "n": "1",
+      "x": -1.925,
+      "y": -0.4,
+      "w": 1.5,
+      "h": 0.5,
+      "shape": "rect",
+      "fn": "1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "2",
+      "x": -1.925,
+      "y": 0.4,
+      "w": 1.5,
+      "h": 0.5,
+      "shape": "rect",
+      "fn": "2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "3",
+      "x": -0.4,
+      "y": 1.925,
+      "w": 0.5,
+      "h": 1.5,
+      "shape": "rect",
+      "fn": "3",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "4",
+      "x": 0.4,
+      "y": 1.925,
+      "w": 0.5,
+      "h": 1.5,
+      "shape": "rect",
+      "fn": "4",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "5",
+      "x": 1.925,
+      "y": 0.4,
+      "w": 1.5,
+      "h": 0.5,
+      "shape": "rect",
+      "fn": "5",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "6",
+      "x": 1.925,
+      "y": -0.4,
+      "w": 1.5,
+      "h": 0.5,
+      "shape": "rect",
+      "fn": "6",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "7",
+      "x": 0.4,
+      "y": -1.925,
+      "w": 0.5,
+      "h": 1.5,
+      "shape": "rect",
+      "fn": "7",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "8",
+      "x": -0.4,
+      "y": -1.925,
+      "w": 0.5,
+      "h": 1.5,
+      "shape": "rect",
+      "fn": "8",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "MX4001D56 (DFN-8(5x6)) — DFN-8(5x6) MOSFETs ROHS",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

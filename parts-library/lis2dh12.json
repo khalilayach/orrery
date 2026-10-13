@@ -1,0 +1,160 @@
+{
+  "id": "lis2dh12",
+  "label": "LIS2DH12 LGA-12",
+  "prefix": "U",
+  "value": "LIS2DH12 LGA-12",
+  "body": [
+    2.48,
+    2.48
+  ],
+  "pads": [
+    {
+      "n": "SCL",
+      "x": -0.9,
+      "y": -0.5,
+      "w": 0.28,
+      "h": 0.2,
+      "shape": "rect",
+      "fn": "SCL",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "CS",
+      "x": -0.9,
+      "y": 0,
+      "w": 0.28,
+      "h": 0.2,
+      "shape": "rect",
+      "fn": "CS",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "SDO",
+      "x": -0.9,
+      "y": 0.5,
+      "w": 0.28,
+      "h": 0.2,
+      "shape": "rect",
+      "fn": "SDO",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "SDA",
+      "x": -0.5,
+      "y": 0.9,
+      "w": 0.2,
+      "h": 0.28,
+      "shape": "rect",
+      "fn": "SDA",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "RES",
+      "x": 0,
+      "y": 0.9,
+      "w": 0.2,
+      "h": 0.28,
+      "shape": "rect",
+      "fn": "RES",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "GND6",
+      "x": 0.5,
+      "y": 0.9,
+      "w": 0.2,
+      "h": 0.28,
+      "shape": "rect",
+      "fn": "GND6",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "GND7",
+      "x": 0.9,
+      "y": 0.5,
+      "w": 0.28,
+      "h": 0.2,
+      "shape": "rect",
+      "fn": "GND7",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "GND8",
+      "x": 0.9,
+      "y": 0,
+      "w": 0.28,
+      "h": 0.2,
+      "shape": "rect",
+      "fn": "GND8",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "VDD",
+      "x": 0.9,
+      "y": -0.5,
+      "w": 0.28,
+      "h": 0.2,
+      "shape": "rect",
+      "fn": "VDD",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "VDDIO",
+      "x": 0.5,
+      "y": -0.9,
+      "w": 0.2,
+      "h": 0.28,
+      "shape": "rect",
+      "fn": "VDDIO",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "INT2",
+      "x": 0,
+      "y": -0.9,
+      "w": 0.2,
+      "h": 0.28,
+      "shape": "rect",
+      "fn": "INT2",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "INT1",
+      "x": -0.5,
+      "y": -0.9,
+      "w": 0.2,
+      "h": 0.28,
+      "shape": "rect",
+      "fn": "INT1",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "3-axis motion sensor (accelerometer), 2x2 mm. Detects shake, tap, pick-up and which way is up.",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

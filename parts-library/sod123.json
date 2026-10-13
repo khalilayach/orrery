@@ -1,0 +1,40 @@
+{
+  "id": "sod123",
+  "label": "SOD-123 diode",
+  "prefix": "D",
+  "value": "SOD-123 diode",
+  "body": [
+    4.6,
+    1.6
+  ],
+  "pads": [
+    {
+      "n": "K",
+      "x": -1.65,
+      "y": 0,
+      "w": 0.9,
+      "h": 1.2,
+      "shape": "rect",
+      "fn": "K",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "A",
+      "x": 1.65,
+      "y": 0,
+      "w": 0.9,
+      "h": 1.2,
+      "shape": "rect",
+      "fn": "A",
+      "thru": false,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "Small diode package. 1 = cathode (stripe), 2 = anode.",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}

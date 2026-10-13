@@ -1,0 +1,112 @@
+{
+  "id": "disp_hdr8",
+  "label": "Display module header (8-pin)",
+  "prefix": "J",
+  "value": "Display module header (8-pin)",
+  "body": [
+    2.1,
+    37.66
+  ],
+  "pads": [
+    {
+      "n": "3V3",
+      "x": 0,
+      "y": 0,
+      "w": 1.7,
+      "h": 1.7,
+      "shape": "circle",
+      "fn": "3V3",
+      "thru": true,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "GND",
+      "x": 0,
+      "y": 2.54,
+      "w": 1.7,
+      "h": 1.7,
+      "shape": "circle",
+      "fn": "GND",
+      "thru": true,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "SCK",
+      "x": 0,
+      "y": 5.08,
+      "w": 1.7,
+      "h": 1.7,
+      "shape": "circle",
+      "fn": "SCK",
+      "thru": true,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "MOSI",
+      "x": 0,
+      "y": 7.62,
+      "w": 1.7,
+      "h": 1.7,
+      "shape": "circle",
+      "fn": "MOSI",
+      "thru": true,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "CS",
+      "x": 0,
+      "y": 10.16,
+      "w": 1.7,
+      "h": 1.7,
+      "shape": "circle",
+      "fn": "CS",
+      "thru": true,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "DC",
+      "x": 0,
+      "y": 12.7,
+      "w": 1.7,
+      "h": 1.7,
+      "shape": "circle",
+      "fn": "DC",
+      "thru": true,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "RST",
+      "x": 0,
+      "y": 15.24,
+      "w": 1.7,
+      "h": 1.7,
+      "shape": "circle",
+      "fn": "RST",
+      "thru": true,
+      "desc": "",
+      "role": ""
+    },
+    {
+      "n": "BL",
+      "x": 0,
+      "y": 17.78,
+      "w": 1.7,
+      "h": 1.7,
+      "shape": "circle",
+      "fn": "BL",
+      "thru": true,
+      "desc": "",
+      "role": ""
+    }
+  ],
+  "desc": "8 solder holes for the 1.69in ST7789 display module's pin header. The module sits flat on the FRONT of the board and its pins pass through to these holes. Order: 3V3, GND, SCK, MOSI, CS, DC, RST, BL - check against your module's silkscreen.",
+  "elec": {},
+  "source": "created in TRACE",
+  "custom": true
+}
